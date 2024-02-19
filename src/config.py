@@ -29,7 +29,7 @@ class AppSettings(BaseSettings):
     # 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     JWT_ALGORITHM: str = "HS256"
-    ROOT_DIR: str = os.path.dirname(__file__)
+    ROOT_DIR: str = os.path.dirname(os.path.abspath(__file__))
 
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
@@ -59,7 +59,7 @@ class AppSettings(BaseSettings):
 
     @field_validator("DATABASE_CONNECTION_URL", mode='before')
     def assemble_db_connection(cls, v: Optional[str], info: FieldValidationInfo) -> Any:
-        return f"sqlite:///./{os.path.join(os.path.dirname(__file__), info.data.get('SQL_DB', ''))}.db"
+        return f"sqlite:///{os.path.join(os.path.dirname(os.path.abspath(__file__)), info.data.get('SQL_DB', ''))}.db"
 
     @field_validator("EMAILS_FROM_NAME")
     def get_project_name(cls, v: Optional[str], info: FieldValidationInfo) -> str:
