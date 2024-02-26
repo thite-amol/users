@@ -4,30 +4,27 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
-from src.auth.dependencies import CurrentUser, SessionDep
-from src.auth.schemas import UserInDBBase, Message, NewPassword, Token
-from src.auth.security import create_access_token, get_password_hash
-from src.auth.service import authenticate, get_user_by_email
+from src.auth.dependencies import CurrentUser
+from src.auth.schemas import UserInDBBase, Message, NewPassword, Token, UserUpdatePassword
+from src.auth.security import create_access_token
+from src.auth.service import authenticate
 from src.auth.utils import (
     generate_password_reset_token,
     send_reset_password_email,
     verify_password_reset_token,
 )
 from src.config import settings
+from src.users.repository import UsersCRUD
 
 login_router = APIRouter()
 
 
 @login_router.post("/login/access-token")
-def login_access_token(
-        session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
-) -> Token:
+async def login_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     """
     OAuth2 compatible token login, get an access token for future requests
     """
-    user = authenticate(
-        session=session, email=form_data.username, password=form_data.password
-    )
+    user = await authenticate(email=form_data.username, password=form_data.password)
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     elif not user.is_active:
@@ -49,11 +46,11 @@ def test_token(current_user: CurrentUser) -> Any:
 
 
 @login_router.post("/password-recovery/{email}")
-def recover_password(email: str, session: SessionDep) -> Message:
+async def recover_password(email: str) -> Message:
     """
     Password Recovery
     """
-    user = get_user_by_email(session=session, email=email)
+    user = await UsersCRUD.get_user_by_email(email=email)
 
     if not user:
         raise HTTPException(
@@ -68,14 +65,15 @@ def recover_password(email: str, session: SessionDep) -> Message:
 
 
 @login_router.post("/reset-password/")
-def reset_password(session: SessionDep, body: NewPassword) -> Message:
+async def reset_password(body: NewPassword) -> Message:
     """
     Reset password
     """
     email = verify_password_reset_token(token=body.token)
+    print(email)
     if not email:
         raise HTTPException(status_code=400, detail="Invalid token")
-    user = get_user_by_email(session=session, email=email)
+    user = await UsersCRUD.get_user_by_email(email=email)
     if not user:
         raise HTTPException(
             status_code=404,
@@ -83,8 +81,8 @@ def reset_password(session: SessionDep, body: NewPassword) -> Message:
         )
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
-    hashed_password = get_password_hash(password=body.new_password)
-    user.password = hashed_password
-    session.add(user)
-    session.commit()
+
+    user.password = body.new_password
+    user_update = UserUpdatePassword.model_validate(user)
+    await UsersCRUD.update(user_update)
     return Message(message="Password updated successfully")

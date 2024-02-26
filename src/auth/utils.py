@@ -6,9 +6,9 @@ from typing import Any, Dict, Optional
 import emails
 import jwt
 from emails.template import JinjaTemplate
+from pydantic import ValidationError
 
 from src.config import settings
-from pydantic import ValidationError
 
 
 def send_email(
@@ -17,7 +17,6 @@ def send_email(
         html_template: str = "",
         environment: Dict[str, Any] = {},
 ) -> None:
-
     assert settings.EMAILS_ENABLED, "no provided configuration for email variables"
     message = emails.Message(
         subject=JinjaTemplate(subject_template),

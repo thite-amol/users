@@ -18,6 +18,7 @@ class AppSettings(BaseSettings):
 
     IS_GOOD_ENV: bool = True
     # ALLOWED_CORS_ORIGINS: set[AnyUrl]
+    DEBUG: bool = False
 
     PROJECT_NAME: str = "Amol's Experiment"
     PROJECT_VERSION: str = "1.0.0"
@@ -59,7 +60,7 @@ class AppSettings(BaseSettings):
 
     @field_validator("DATABASE_CONNECTION_URL", mode='before')
     def assemble_db_connection(cls, v: Optional[str], info: FieldValidationInfo) -> Any:
-        return f"sqlite:///{os.path.join(os.path.dirname(os.path.abspath(__file__)), info.data.get('SQL_DB', ''))}.db"
+        return f"sqlite+aiosqlite:///{os.path.join(os.path.dirname(os.path.abspath(__file__)), info.data.get('SQL_DB', ''))}.db"
 
     @field_validator("EMAILS_FROM_NAME")
     def get_project_name(cls, v: Optional[str], info: FieldValidationInfo) -> str:
