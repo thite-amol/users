@@ -1,59 +1,24 @@
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, field_validator
 
-from src.auth.security import is_password_hashed, get_password_hash
+from src.auth.security import get_password_hash, is_password_hashed
 from src.users.schemas import UserBase
 
 
 class UserUpdatePassword(UserBase):
     password: str
 
-    @field_validator('password')
+    @field_validator("password")
     def hash_password(cls, pw: str) -> str:
         if is_password_hashed(pw):
             return pw
         return get_password_hash(pw)
-
-
-# Properties to receive via API on creation
-class UserCreate(UserBase):
-    email: EmailStr
-    password: str
-
-    # first_name: str
-    # last_name: str
-    @field_validator('password')
-    def hash_password(cls, pw: str) -> str:
-        if is_password_hashed(pw):
-            return pw
-        return get_password_hash(pw)
-
-
-# Properties to receive via API on update
-class UserUpdate(UserBase):
-    password: Optional[str] = None
 
 
 class NewPassword(BaseModel):
     token: str
     new_password: str
-
-
-class UserOut(UserBase):
-    id: int
-
-
-class UserInDBBase(UserBase):
-    id: Optional[int] = None
-
-    class Config:
-        from_attributes = True
-
-
-# Additional properties to return via API
-class User(UserInDBBase):
-    pass
 
 
 class Token(BaseModel):
@@ -63,11 +28,3 @@ class Token(BaseModel):
 
 class TokenPayload(BaseModel):
     sub: Optional[int] = None
-
-
-class Msg(BaseModel):
-    msg: str
-
-
-class Message(BaseModel):
-    message: str

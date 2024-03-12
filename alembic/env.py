@@ -1,12 +1,12 @@
 import asyncio
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 import src.users.model  # noqa
+from alembic import context
 from src.config import settings
 from src.db.base import ConcreteBase  # noqa
 
@@ -30,6 +30,7 @@ target_metadata = ConcreteBase.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
 
 def get_url():
     return settings.DATABASE_CONNECTION_URL
@@ -89,7 +90,6 @@ async def run_async_migrations() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-
     asyncio.run(run_async_migrations())
 
 

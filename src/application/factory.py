@@ -17,16 +17,15 @@ __all__ = ("create",)
 
 
 def create(
-        *_,
-        rest_routers: Iterable[APIRouter],
-        startup_tasks: Iterable[Callable[[], Coroutine]] | None = None,
-        shutdown_tasks: Iterable[Callable[[], Coroutine]] | None = None,
-        **kwargs,
+    *_,
+    rest_routers: Iterable[APIRouter],
+    startup_tasks: Iterable[Callable[[], Coroutine]] | None = None,
+    shutdown_tasks: Iterable[Callable[[], Coroutine]] | None = None,
+    **kwargs,
 ) -> FastAPI:
     """The application factory using FastAPI framework.
     🎉 Only passing routes is mandatory to start.
     """
-
     # Initialize the base FastAPI application
     app = FastAPI(**kwargs)
 

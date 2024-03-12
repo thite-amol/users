@@ -21,7 +21,7 @@ def transaction(coro):
             result = await coro(*args, **kwargs)
             await session.commit()
             return result
-        except DatabaseError as error:
+        except DatabaseError:
             # NOTE: If any sort of issues are occurred in the code
             #       they are handled on the BaseCRUD level and raised
             #       as a DatabseError.
@@ -30,7 +30,7 @@ def transaction(coro):
             #       would raise an error.
             await session.rollback()
             raise DatabaseError
-        except (IntegrityError, PendingRollbackError) as error:
+        except (IntegrityError, PendingRollbackError):
             # NOTE: Since there is a session commit on this level it should
             #       be handled because it can raise some errors also
             await session.rollback()

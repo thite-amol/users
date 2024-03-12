@@ -4,17 +4,21 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import ValidationError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.schemas import TokenPayload
 from src.config import settings
-from src.db.session import get_session, CTX_SESSION
+from src.db.session import CTX_SESSION
 from src.users.model import User
 
-reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"/login/access-token"
-)
+reusable_oauth2 = OAuth2PasswordBearer(tokenUrl="/login")
 
-SessionDep = Annotated[CTX_SESSION, Depends(get_session)]
+
+def get_current_session():
+    return CTX_SESSION.get()
+
+
+SessionDep = Annotated[AsyncSession, Depends(get_current_session)]
 TokenDep = Annotated[str, Depends(reusable_oauth2)]
 
 

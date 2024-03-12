@@ -1,8 +1,8 @@
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import EmailStr, field_validator
 
-from src.auth.security import is_password_hashed, get_password_hash
+from src.auth.security import get_password_hash, is_password_hashed
 from src.models import InternalModel
 
 
@@ -21,7 +21,7 @@ class UserCreate(UserBase):
     email: EmailStr
     password: str
 
-    @field_validator('password')
+    @field_validator("password")
     def hash_password(cls, pw: str) -> str:
         if is_password_hashed(pw):
             return pw
@@ -36,6 +36,15 @@ class UserCreateOpen(UserCreate):
 class UserUpdate(UserBase):
     password: Optional[str] = None
 
+    @field_validator("password")
+    def hash_password(cls, pw: str) -> str:
+        if not pw:
+            return pw
+
+        if is_password_hashed(pw):
+            return pw
+        return get_password_hash(pw)
+
 
 class UserOut(UserBase):
     id: int
@@ -44,27 +53,7 @@ class UserOut(UserBase):
 class UserInDBBase(UserBase):
     id: Optional[int] = None
 
-    class Config:
-        from_attributes = True
-
 
 # Additional properties to return via API
 class User(UserInDBBase):
     pass
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-
-class TokenPayload(BaseModel):
-    sub: Optional[int] = None
-
-
-class Msg(BaseModel):
-    msg: str
-
-
-class Message(BaseModel):
-    message: str

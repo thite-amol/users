@@ -12,12 +12,16 @@ from src.config import settings
 
 
 def send_email(
-        email_to: str,
-        subject_template: str = "",
-        html_template: str = "",
-        environment: Dict[str, Any] = {},
+    email_to: str,
+    subject_template: str = "",
+    html_template: str = "",
+    environment: Optional[Dict[str, Any]] = None,
 ) -> None:
-    assert settings.EMAILS_ENABLED, "no provided configuration for email variables"
+    if environment is None:
+        environment = {}
+    assert (
+        settings.EMAILS_ENABLED
+    ), "no provided configuration for email variables"
     message = emails.Message(
         subject=JinjaTemplate(subject_template),
         html=JinjaTemplate(html_template),
@@ -94,14 +98,18 @@ def generate_password_reset_token(email: str) -> str:
     expires = now + delta
     exp = expires.timestamp()
     encoded_jwt = jwt.encode(
-        {"exp": exp, "nbf": now, "email": email}, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM,
+        {"exp": exp, "nbf": now, "email": email},
+        settings.SECRET_KEY,
+        algorithm=settings.JWT_ALGORITHM,
     )
     return encoded_jwt
 
 
 def verify_password_reset_token(token: str) -> Optional[str]:
     try:
-        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        decoded_token = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+        )
         return decoded_token["email"]
     except (jwt.PyJWTError, ValidationError):
         return None

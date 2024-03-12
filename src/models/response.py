@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 from typing import Any, Generic
 
-from pydantic import Field, conlist, BaseModel
+from pydantic import BaseModel, Field, conlist
 
 from src.models.base import PublicModel, _PublicModel
 
@@ -40,6 +40,10 @@ class ErrorResponse(PublicModel):
 
 
 class ErrorResponseMulti(PublicModel):
-    """The public error respnse model that includes multiple objects."""
+    """The public error response model that includes multiple objects."""
 
     results: conlist(ErrorResponse, min_length=1)  # type: ignore
+
+
+class Message(BaseModel):
+    message: str

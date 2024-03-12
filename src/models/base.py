@@ -1,6 +1,4 @@
-"""
-This model includes basic data models that are used in the whole application.
-"""
+"""This model includes basic data models that are used in the whole application."""
 
 import json
 from typing import TypeVar
@@ -18,7 +16,6 @@ __all__ = (
 
 def to_camelcase(string: str) -> str:
     """The alias generator for PublicModel."""
-
     resp = "".join(
         word.capitalize() if index else word
         for index, word in enumerate(string.split("_"))

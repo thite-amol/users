@@ -34,12 +34,12 @@ class BaseRepository(Session, Generic[Base]):  # type: ignore
             )
 
     async def _update(
-            self, key: str, value: Any, payload: dict[str, Any]
+        self, key: str, value: Any, payload: dict[str, Any]
     ) -> Base:
         """Updates an existed instance of the model in the related table.
         If some data is not exist in the payload then the null value will
-        be passed to the schema class."""
-
+        be passed to the schema class.
+        """
         query = (
             update(self.schema_class)
             .where(getattr(self.schema_class, key) == value)
@@ -56,9 +56,8 @@ class BaseRepository(Session, Generic[Base]):  # type: ignore
 
         return schema
 
-    async def _get(self, key: str, value: Any) -> Base:
-        """Return only one result by filters"""
-
+    async def _get(self, key: str, value: Any) -> Base | None:
+        """Return only one result by filters."""
         query = select(self.schema_class).where(
             getattr(self.schema_class, key) == value
         )
@@ -118,8 +117,11 @@ class BaseRepository(Session, Generic[Base]):  # type: ignore
         for schema in schemas:
             yield schema
 
-    async def delete(self, id_: int) -> None:
+    async def delete(self, id_: int) -> bool:
         await self.execute(
             delete(self.schema_class).where(self.schema_class.id == id_)
         )
         await self._session.flush()
+        await self._session.commit()
+
+        return True

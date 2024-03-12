@@ -1,5 +1,4 @@
-"""
-This module is used for representing FastAPI error handlers
+"""This module is used for representing FastAPI error handlers
 that are dispatched automatically by fastapi engine.
 """
 
@@ -21,7 +20,6 @@ __all__ = (
 
 def custom_base_errors_handler(_: Request, error: BaseError) -> JSONResponse:
     """This function is called if the BaseError was raised."""
-
     response = ErrorResponseMulti(
         results=[ErrorResponse(message=error.message.capitalize())]
     )
@@ -34,7 +32,6 @@ def custom_base_errors_handler(_: Request, error: BaseError) -> JSONResponse:
 
 def python_base_error_handler(_: Request, error: Exception) -> JSONResponse:
     """This function is called if the Exception was raised."""
-
     response = ErrorResponseMulti(
         results=[ErrorResponse(message=f"Unhandled error: {error}")]
     )
@@ -46,10 +43,9 @@ def python_base_error_handler(_: Request, error: Exception) -> JSONResponse:
 
 
 def pydantic_validation_errors_handler(
-        _: Request, error: RequestValidationError
+    _: Request, error: RequestValidationError
 ) -> JSONResponse:
     """This function is called if the Pydantic validation error was raised."""
-
     response = ErrorResponseMulti(
         results=[
             ErrorResponse(

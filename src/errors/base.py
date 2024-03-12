@@ -1,5 +1,4 @@
-"""
-This module is responsible for describing shared errors
+"""This module is responsible for describing shared errors
 that are handled on the last step of processing the request.
 """
 
@@ -20,10 +19,10 @@ __all__ = (
 
 class BaseError(Exception):
     def __init__(
-            self,
-            *_: tuple[Any],
-            message: str = "",
-            status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
+        self,
+        *_: tuple[Any],
+        message: str = "",
+        status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
     ) -> None:
         self.message: str = message
         self.status_code: int = status_code
@@ -41,7 +40,7 @@ class BadRequestError(BaseError):
 
 class UnprocessableError(BaseError):
     def __init__(
-            self, *_: tuple[Any], message: str = "Validation error"
+        self, *_: tuple[Any], message: str = "Validation error"
     ) -> None:
         super().__init__(
             message=message,
@@ -51,15 +50,11 @@ class UnprocessableError(BaseError):
 
 class NotFoundError(BaseError):
     def __init__(self, *_: tuple[Any], message: str = "Not found") -> None:
-        super().__init__(
-            message=message, status_code=status.HTTP_404_NOT_FOUND
-        )
+        super().__init__(message=message, status_code=status.HTTP_404_NOT_FOUND)
 
 
 class DatabaseError(BaseError):
-    def __init__(
-            self, *_: tuple[Any], message: str = "Database error"
-    ) -> None:
+    def __init__(self, *_: tuple[Any], message: str = "Database error") -> None:
         super().__init__(
             message=message, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
@@ -67,7 +62,7 @@ class DatabaseError(BaseError):
 
 class AuthenticationError(BaseError):
     def __init__(
-            self, *_: tuple[Any], message: str = "Authentication error"
+        self, *_: tuple[Any], message: str = "Authentication error"
     ) -> None:
         super().__init__(
             message=message,
@@ -77,8 +72,6 @@ class AuthenticationError(BaseError):
 
 class AuthorizationError(BaseError):
     def __init__(
-            self, *_: tuple[Any], message: str = "Authorization error"
+        self, *_: tuple[Any], message: str = "Authorization error"
     ) -> None:
-        super().__init__(
-            message=message, status_code=status.HTTP_403_FORBIDDEN
-        )
+        super().__init__(message=message, status_code=status.HTTP_403_FORBIDDEN)

@@ -10,9 +10,7 @@ api_router = APIRouter()
 
 @api_router.get("/", status_code=200)
 async def root() -> dict:
-    """
-    Root Get
-    """
+    """Root Get."""
     return {"msg": "Hello, World!"}
 
 
@@ -20,7 +18,7 @@ async def root() -> dict:
 # -------------------------------
 app: FastAPI = application.create(
     title=settings.PROJECT_NAME,
-    openapi_url=f"/openapi.json",
+    openapi_url="/openapi.json",
     debug=settings.DEBUG,
     # rest_routers=(rest.products.router, rest.orders.router),
     rest_routers=[user_router],
@@ -28,7 +26,7 @@ app: FastAPI = application.create(
     shutdown_tasks=[],
 )
 
-app.include_router(login_router, tags=["login"])
+app.include_router(login_router, tags=["Auth"])
 
 if __name__ == "__main__":
     # Use this for debugging purposes only
