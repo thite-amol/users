@@ -97,7 +97,6 @@ jobs:
           flavor: |
             latest=false
           tags: >
-            # comment these out on all but 04-add-metadata.yaml to avoid
             overwriting image tags
 
             type=raw,value=latest,enable=${{ endsWith(github.ref,
