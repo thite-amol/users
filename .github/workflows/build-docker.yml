@@ -30,7 +30,6 @@ jobs:
         with:
           push: true
           tags: 'ghcr.io/thite-amol/users:${{ github.run_id }}'
-          target: test
           cache-from: type=gha
           cache-to: 'type=gha,mode=max'
           platforms: linux/amd64
