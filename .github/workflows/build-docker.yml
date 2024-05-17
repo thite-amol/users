@@ -97,7 +97,6 @@ jobs:
             latest=false
           tags: |
             type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
-            type=ref,event=pr
             type=ref,event=branch
             type=semver,pattern={{version}}
       - name: Docker Build and Push to GHCR and Docker Hub
