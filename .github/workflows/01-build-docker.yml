@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Multiple platform support
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      #- name: Set up QEMU
+      #  uses: docker/setup-qemu-action@v3
 
       # Add caching
       - name: Set up Docker Buildx
@@ -54,4 +54,4 @@ jobs:
           cache-to: type=gha,mode=max
 
           # Multiple platform support
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          # platforms: linux/amd64,linux/arm64,linux/arm/v7
