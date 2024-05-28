@@ -3,14 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      - SQL_DB=users
-      - SMTP_HOST=''
-      - SMTP_USER=''
-      - SMTP_PASSWORD=''
-      - EMAILS_FROM_EMAIL=email@example.com
-      - FIRST_SUPERUSER=amol@mailinator.com
-      - FIRST_SUPERUSER_PASSWORD=abcd1234
+    env_file:
+      - src/.env
     ports:
       - '8080:8080'
     volumes:
