@@ -1,4 +1,5 @@
 [tool.ruff]
+exclude = ["alembic/*"]
 line-length = 80
 target-version = "py38"
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"

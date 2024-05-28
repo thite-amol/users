@@ -1,32 +1,29 @@
-from fastapi import APIRouter, FastAPI
+"""Entry path."""
+
+from fastapi import FastAPI
 
 from src import application
-from src.auth.router import login_router
+
+# from src.auth.router import login_router
 from src.config import settings
-from src.users.router import user_router
 
-api_router = APIRouter()
-
-
-@api_router.get("/", status_code=200)
-async def root() -> dict:
-    """Root Get."""
-    return {"msg": "Hello, World!"}
-
+# from src.users.router import user_router
+from src.utils.serializers import MsgSpecJSONResponse
 
 # Adjust the application
 # -------------------------------
 app: FastAPI = application.create(
     title=settings.PROJECT_NAME,
-    openapi_url="/openapi.json",
+    openapi_url=settings.OPENAPI_URL,
+    docs_url=settings.DOCS_URL,
     debug=settings.DEBUG,
-    # rest_routers=(rest.products.router, rest.orders.router),
-    rest_routers=[user_router],
+    version=settings.PROJECT_VERSION,
+    default_response_class=MsgSpecJSONResponse,
     startup_tasks=[],
     shutdown_tasks=[],
 )
 
-app.include_router(login_router, tags=["Auth"])
+# app.include_router(login_router, tags=["Auth"])
 
 if __name__ == "__main__":
     # Use this for debugging purposes only

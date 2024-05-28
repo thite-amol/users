@@ -1,3 +1,5 @@
+"""Module."""
+
 import asyncio
 import logging
 
@@ -8,10 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 async def init() -> None:
+    """_summary_."""
     await init_db()
 
 
 async def main() -> None:
+    """_summary_."""
     logger.info("Creating initial data")
     await init()
     logger.info("Initial data created")

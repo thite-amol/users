@@ -1,32 +1,81 @@
-from typing import TypeVar
+"""Module."""
 
-from sqlalchemy import Column, Integer, MetaData
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import declarative_base
+from datetime import datetime
+from typing import Annotated
 
-meta = MetaData(
-    naming_convention={
-        "ix": "ix_%(column_0_label)s",
-        "uq": "uq_%(table_name)s_%(column_0_name)s",
-        "ck": "ck_%(table_name)s_`%(constraint_name)s`",
-        "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-        "pk": "pk_%(table_name)s",
-    }
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    MappedAsDataclass,
+    declared_attr,
+    mapped_column,
 )
 
+from src.utils.timezone import timezone
 
-class _Base:
-    """Base class for all database models."""
+# MappedBase -> id: Mapped[id_key]
+# DataClassBase && Base -> id: Mapped[id_key] = mapped_column(init=False)
+id_key = Annotated[
+    int,
+    mapped_column(
+        primary_key=True, index=True, autoincrement=True, sort_order=-999
+    ),
+]
 
-    id = Column(Integer, primary_key=True)
-    __name__: str
 
-    # to generate tablename from classname
-    @declared_attr
+class MappedBase(DeclarativeBase):
+    """`DeclarativeBase <https://docs.sqlalchemy.org/en/20/orm/declarative_config.html>`__
+    `mapped_column() <https://docs.sqlalchemy.org/en/20/orm/mapping_api.html#sqlalchemy.orm.mapped_column>`__.
+
+    Args:
+        DeclarativeBase (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    @declared_attr.directive
     def __tablename__(cls) -> str:
+        """_summary_.
+
+        Returns:
+            str: _description_
+        """
         return cls.__name__.lower()
 
 
-ConcreteBase = declarative_base(cls=_Base, metadata=meta)
+class DateTimeMixin(MappedAsDataclass):
+    """_summary_.
 
-Base = TypeVar("Base", bound=ConcreteBase)  # type: ignore
+    Args:
+        MappedAsDataclass (_type_): _description_
+    """
+
+    created_time: Mapped[datetime] = mapped_column(
+        init=False, default_factory=timezone.now_utc, sort_order=999
+    )
+    updated_time: Mapped[datetime | None] = mapped_column(
+        init=False, onupdate=timezone.now_utc, sort_order=999
+    )
+
+
+class DataClassBase(MappedAsDataclass, MappedBase):
+    """`MappedAsDataclass <https://docs.sqlalchemy.org/en/20/orm/dataclasses.html#orm-declarative-native-dataclasses>`__.
+
+    Args:
+        MappedAsDataclass (_type_): _description_
+        MappedBase (_type_): _description_
+    """
+
+    __abstract__ = True
+
+
+class Base(DataClassBase, DateTimeMixin):
+    """_summary_.
+
+    Args:
+        DataClassBase (_type_): _description_
+        DateTimeMixin (_type_): _description_
+    """
+
+    __abstract__ = True

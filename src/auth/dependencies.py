@@ -1,3 +1,5 @@
+"""Module."""
+
 from typing import Annotated
 
 import jwt
@@ -15,6 +17,11 @@ reusable_oauth2 = OAuth2PasswordBearer(tokenUrl="/login")
 
 
 def get_current_session():
+    """_summary_.
+
+    Returns:
+        _type_: _description_
+    """
     return CTX_SESSION.get()
 
 
@@ -23,6 +30,20 @@ TokenDep = Annotated[str, Depends(reusable_oauth2)]
 
 
 async def get_current_user(session: SessionDep, token: TokenDep) -> User:
+    """_summary_.
+
+    Args:
+        session (SessionDep): _description_
+        token (TokenDep): _description_
+
+    Raises:
+        HTTPException: _description_
+        HTTPException: _description_
+        HTTPException: _description_
+
+    Returns:
+        User: _description_
+    """
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
@@ -45,8 +66,22 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 def get_current_active_superuser(current_user: CurrentUser) -> User:
+    """_summary_.
+
+    Args:
+        current_user (CurrentUser): _description_
+
+    Raises:
+        HTTPException: _description_
+
+    Returns:
+        User: _description_
+    """
     if not current_user.is_superuser:
         raise HTTPException(
             status_code=400, detail="The user doesn't have enough privileges"
         )
     return current_user
+
+
+SuperUser = Annotated[User, Depends(get_current_active_superuser)]
