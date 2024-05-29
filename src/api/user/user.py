@@ -1,4 +1,4 @@
-"""Module."""
+"""Module to register users routes."""
 
 from fastapi import APIRouter
 
@@ -14,14 +14,14 @@ router = APIRouter()
 async def register_user(
     obj: UserCreateOpen, session: CurrentSession
 ) -> ResponseModel:
-    """_summary_.
+    """Register users without superuser.
 
     Args:
-        obj (UserCreateOpen): _description_
-        session (CurrentSession): _description_
+        obj (UserCreateOpen): User fields
+        session (CurrentSession): db session
 
     Returns:
-        ResponseModel: _description_
+        ResponseModel: User details if succeed
     """
     user_data = await user_service.register(user_data=obj, db=session)
     return await response_base.success(data=user_data)

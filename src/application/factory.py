@@ -1,10 +1,12 @@
 """Module."""
 
 import asyncio
+import os
 from functools import partial
 from typing import Callable, Coroutine, Iterable
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi_pagination import add_pagination
 from starlette.middleware.cors import CORSMiddleware
 
@@ -66,10 +68,6 @@ def register_static_file(app: FastAPI):
         app (FastAPI): _description_
     """
     if settings.STATIC_FILES:
-        import os
-
-        from fastapi.staticfiles import StaticFiles
-
         if not os.path.exists(STATIC_DIR):
             os.mkdir(STATIC_DIR)
         app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

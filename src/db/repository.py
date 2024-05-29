@@ -1,6 +1,6 @@
-"""Module."""
+"""Database base repository."""
 
-from typing import Any, AsyncGenerator, Generic, Type, TypeVar
+from typing import Any, AsyncGenerator, Callable, Generic, Type, TypeVar
 
 from pydantic import BaseModel
 from sqlalchemy import Result, asc, delete, desc, func, select, update
@@ -11,33 +11,21 @@ from src.db.base import Base
 _Model = TypeVar("_Model")
 _CreateSchema = TypeVar("_CreateSchema", bound=BaseModel)
 _UpdateSchema = TypeVar("_UpdateSchema", bound=BaseModel)
+func: Callable
 
 
 class BaseRepository(Generic[_Model]):
-    """This class implements the base interface for working with database and makes it easier to work with type annotations.
-
-    Args:
-        Generic (_type_): _description_
-
-    Raises:
-        Exception: _description_
-        Exception: _description_
-        Exception: _description_
-
-    Returns:
-        _type_: _description_
-
-    Yields:
-        _type_: _description_
+    """This class implements the base interface for working with database
+    and makes it easier to work with type annotations.
     """
 
     schema_class: Type[Base]
 
     def __init__(self, model: Type[_Model]) -> None:
-        """_summary_.
+        """Class initializer.
 
         Args:
-            model (Type[_Model]): _description_
+            model (Type[_Model]): SqlAlchemy base class
         """
         self.schema_class = model
 
@@ -75,10 +63,7 @@ class BaseRepository(Generic[_Model]):
         await session.commit()
         await session.refresh(payload)
 
-        if not (schema := result.scalar_one_or_none()):
-            raise Exception
-
-        return schema
+        return result.scalar_one_or_none()
 
     async def _get(
         self, session: AsyncSession, key: str, value: Any
@@ -132,10 +117,7 @@ class BaseRepository(Generic[_Model]):
             select(self.schema_class).order_by(asc(by)).limit(1)
         )
 
-        if not (_result := result.scalar_one_or_none()):
-            raise Exception
-
-        return _result
+        return result.scalar_one_or_none()
 
     async def _last(self, session: AsyncSession, by: str = "id") -> Base:
         """_summary_.
@@ -154,10 +136,7 @@ class BaseRepository(Generic[_Model]):
             select(self.schema_class).order_by(desc(by)).limit(1)
         )
 
-        if not (_result := result.scalar_one_or_none()):
-            raise Exception
-
-        return _result
+        return result.scalar_one_or_none()
 
     async def _save(
         self, session: AsyncSession, payload: dict[str, Any]

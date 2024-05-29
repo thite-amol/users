@@ -1,11 +1,12 @@
 """Module."""
 
-from typing import Optional
+from datetime import datetime
 
-from pydantic import BaseModel, field_validator
+from pydantic import field_validator
 
 from src.auth.security import get_password_hash, is_password_hashed
-from src.users.schemas import UserBase
+from src.common.schema import SchemaBase
+from src.users.schemas import GetUserInfoNoRelationDetail, UserBase
 
 
 class UserUpdatePassword(UserBase):
@@ -35,33 +36,37 @@ class UserUpdatePassword(UserBase):
         return get_password_hash(pw)
 
 
-class NewPassword(BaseModel):
+class AuthSchemaBase(SchemaBase):
     """_summary_.
 
     Args:
-        BaseModel (_type_): _description_
+        SchemaBase (_type_): _description_
     """
 
-    token: str
-    new_password: str
+    username: str
+    password: str | None
 
 
-class Token(BaseModel):
-    """_summary_.
-
-    Args:
-        BaseModel (_type_): _description_
-    """
+class AccessTokenBase(SchemaBase):
+    """JWT token base class."""
 
     access_token: str
-    token_type: str = "bearer"
+    token_type: str = "Bearer"
+    access_token_expire_time: datetime
 
 
-class TokenPayload(BaseModel):
-    """_summary_.
+class GetLoginToken(AccessTokenBase):
+    """Login JWT token class."""
 
-    Args:
-        BaseModel (_type_): _description_
-    """
+    refresh_token: str
+    refresh_token_type: str = "Bearer"
+    refresh_token_expire_time: datetime
+    user: GetUserInfoNoRelationDetail
 
-    sub: Optional[int] = None
+
+class GetNewToken(AccessTokenBase):
+    """New JWT token class."""
+
+    refresh_token: str
+    refresh_token_type: str = "Bearer"
+    refresh_token_expire_time: datetime

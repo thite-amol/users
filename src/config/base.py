@@ -34,7 +34,7 @@ class AppSettings(BaseSettings):
 
     IS_GOOD_ENV: bool = True
     # ALLOWED_CORS_ORIGINS: set[AnyUrl]
-    DEBUG: bool = True
+    DEBUG: bool = False
     ENVIRONMENT: Literal["dev", "prod"] = "dev"
 
     PROJECT_NAME: str = "Amol's Experiment"
@@ -50,6 +50,7 @@ class AppSettings(BaseSettings):
     SECRET_KEY: str = secrets.token_urlsafe(32)
     # 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
+    TOKEN_EXPIRE_MINUTES: int = 15
     JWT_ALGORITHM: str = "HS256"
     ROOT_DIR: str = os.path.dirname(os.path.abspath(__file__))
 
@@ -77,7 +78,9 @@ class AppSettings(BaseSettings):
 
     @field_validator("BACKEND_CORS_ORIGINS")
     def assemble_cors_origins(
-        cls, v: str, info: FieldValidationInfo
+        cls,
+        v: str,
+        info: FieldValidationInfo,  # pylint: disable=unused-argument
     ) -> Union[List[str], str]:
         """_summary_.
 
@@ -101,7 +104,9 @@ class AppSettings(BaseSettings):
 
     @field_validator("DATABASE_CONNECTION_URL", mode="before")
     def assemble_db_connection(
-        cls, v: Optional[str], info: FieldValidationInfo
+        cls,
+        v: Optional[str],  # pylint: disable=unused-argument
+        info: FieldValidationInfo,
     ) -> Any:
         """_summary_.
 
@@ -112,7 +117,11 @@ class AppSettings(BaseSettings):
         Returns:
             Any: _description_
         """
-        return f"sqlite+aiosqlite:///{os.path.join(os.path.dirname(os.path.abspath(__file__)), info.data.get('SQL_DB', ''))}.db"
+        return (
+            f"sqlite+aiosqlite:///"
+            f"{os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            info.data.get('SQL_DB', ''))}.db"  # pylint: disable=inconsistent-quotes
+        )
 
     @field_validator("EMAILS_FROM_NAME")
     def get_project_name(
@@ -139,7 +148,7 @@ class AppSettings(BaseSettings):
     EMAILS_ENABLED: bool = True
 
     @field_validator("EMAILS_ENABLED")
-    def get_emails_enabled(cls, v: bool, info: FieldValidationInfo) -> bool:
+    def get_emails_enabled(cls, v: bool, info: FieldValidationInfo) -> bool:  # pylint: disable=unused-argument
         """_summary_.
 
         Args:

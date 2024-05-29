@@ -1,4 +1,5 @@
 """Module."""
+# pylint: disable=unsubscriptable-object
 
 from datetime import datetime
 

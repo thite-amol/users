@@ -46,12 +46,12 @@ class IntEnum(_EnumBase, SourceIntEnum):
 class RoleDataScopeType(IntEnum):
     """data range."""
 
-    all = 1
-    custom = 2
+    ALL = 1
+    CUSTOM = 2
 
 
 class StatusType(IntEnum):
     """status type."""
 
-    disable = 0
-    enable = 1
+    DISABLE = 0
+    ENABLE = 1

@@ -81,6 +81,8 @@ ban-relative-imports = "all"
 [tool.ruff.lint.isort]
 forced-separate = ["tests"]
 
+[tool.pylint.MASTER]
+load-plugins = "pylint_pydantic"
 
 [tool.ruff.format]
 # Enable reformatting of code snippets in docstrings.

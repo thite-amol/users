@@ -1,17 +1,17 @@
 """Module."""
 
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Callable
 
 from pydantic import EmailStr
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.repository import BaseRepository
-from src.role.model import Role
 from src.users.model import User as UserTable
-from src.users.schemas import AddUserParam, UserBase, UserCreate
+from src.users.schemas import UserBase, UserCreate
+from src.utils.timezone import timezone
 
-all = ("UsersRepository",)
+func: Callable
 
 
 class UsersRepository(BaseRepository[UserTable]):
@@ -25,7 +25,7 @@ class UsersRepository(BaseRepository[UserTable]):
         """_summary_."""
         super().__init__(UserTable)
 
-    async def all(self) -> AsyncGenerator[UserBase, None]:
+    async def all(self, db: AsyncSession) -> AsyncGenerator[UserBase, None]:
         """_summary_.
 
         Returns:
@@ -34,19 +34,20 @@ class UsersRepository(BaseRepository[UserTable]):
         Yields:
             Iterator[AsyncGenerator[UserBase, None]]: _description_
         """
-        async for instance in self._all():
+        async for instance in self._all(session=db):
             yield instance
 
-    async def get(self, id_: int) -> UserBase:
+    async def get(self, db: AsyncSession, id_: int) -> UserBase:
         """_summary_.
 
         Args:
+            db (AsyncSession): _description_
             id_ (int): _description_
 
         Returns:
             UserBase: _description_
         """
-        return await self._get(key="id", value=id_)
+        return await self._get(session=db, key="id", value=id_)
 
     async def create(self, db: AsyncSession, user_data: UserCreate) -> UserBase:
         """_summary_.
@@ -61,32 +62,34 @@ class UsersRepository(BaseRepository[UserTable]):
         dict_user = user_data.model_dump()
         return await self._save(session=db, payload=dict_user)
 
-    async def add(self, db: AsyncSession, obj: AddUserParam) -> None:
+    # async def add(self, db: AsyncSession, obj: AddUserParam) -> None:
+    #     """_summary_.
+
+    #     Args:
+    #         db (AsyncSession): _description_
+    #         obj (AddUserParam): _description_
+    #     """
+    #     dict_obj = obj.model_dump(exclude={"roles"})
+    #     new_user = self.schema_class(**dict_obj)
+
+    #     role_list = []
+    #     for role_id in obj.roles:
+    #         role_list.append(await db.get(Role, role_id))
+    #     new_user.roles.extend(role_list)
+    #     db.add(new_user)
+
+    async def update(self, db: AsyncSession, schema: UserBase) -> UserBase:
         """_summary_.
 
         Args:
             db (AsyncSession): _description_
-            obj (AddUserParam): _description_
-        """
-        dict_obj = obj.model_dump(exclude={"roles"})
-        new_user = self.schema_class(**dict_obj)
-
-        role_list = []
-        for role_id in obj.roles:
-            role_list.append(await db.get(Role, role_id))
-        new_user.roles.extend(role_list)
-        db.add(new_user)
-
-    async def update(self, schema: UserBase) -> UserBase:
-        """_summary_.
-
-        Args:
             schema (UserBase): _description_
 
         Returns:
             UserBase: _description_
         """
         return await self._update(
+            session=db,
             key="id",
             value=schema.id,
             payload=schema.model_dump(exclude_unset=True),
@@ -120,6 +123,24 @@ class UsersRepository(BaseRepository[UserTable]):
         """
         return await self._get(session=db, key="username", value=username)
 
+    async def update_login_time(
+        self, db: AsyncSession, user_data: UserBase
+    ) -> UserBase:
+        """Update user login time.
+
+
+        Args:
+            db (AsyncSession): database session
+            user_data (str): Current user data
+
+        Returns:
+            UserBase: User detail
+        """
+        user_data.last_login_time = timezone.now_utc()
+        await db.commit()
+        await db.refresh(user_data)
+        return user_data
+
     async def paginate(self, limit: int, offset: int):
         """_summary_.
 
@@ -137,7 +158,7 @@ class UsersRepository(BaseRepository[UserTable]):
             select(self.schema_class).limit(limit).offset(offset).order_by("id")
         )
         data = await self.execute(query)
-        return data.scalars().all(), count
+        return data.scalars().ALL(), count
 
 
 UsersCRUD = UsersRepository()

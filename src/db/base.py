@@ -15,7 +15,7 @@ from src.utils.timezone import timezone
 
 # MappedBase -> id: Mapped[id_key]
 # DataClassBase && Base -> id: Mapped[id_key] = mapped_column(init=False)
-id_key = Annotated[
+id_key = Annotated[  # pylint: disable=invalid-name
     int,
     mapped_column(
         primary_key=True, index=True, autoincrement=True, sort_order=-999
@@ -35,7 +35,7 @@ class MappedBase(DeclarativeBase):
     """
 
     @declared_attr.directive
-    def __tablename__(cls) -> str:
+    def __tablename__(cls) -> str:  # pylint: disable=no-self-argument
         """_summary_.
 
         Returns:
@@ -60,7 +60,8 @@ class DateTimeMixin(MappedAsDataclass):
 
 
 class DataClassBase(MappedAsDataclass, MappedBase):
-    """`MappedAsDataclass <https://docs.sqlalchemy.org/en/20/orm/dataclasses.html#orm-declarative-native-dataclasses>`__.
+    """`MappedAsDataclass
+    <https://docs.sqlalchemy.org/en/20/orm/dataclasses.html#orm-declarative-native-dataclasses>`__.
 
     Args:
         MappedAsDataclass (_type_): _description_

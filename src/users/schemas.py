@@ -3,10 +3,11 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import EmailStr, Field, field_validator
+from pydantic import ConfigDict, EmailStr, Field, field_validator
 
 from src.auth.security import get_password_hash, is_password_hashed
-from src.common.schema import SchemaBase
+from src.common.enums import StatusType
+from src.common.schema import CustomPhoneNumber, SchemaBase
 from src.role.schemas import GetRoleListDetails
 
 
@@ -72,28 +73,6 @@ class UserCreateOpen(UserCreate):
     """
 
     pass
-
-
-class AuthSchemaBase(SchemaBase):
-    """_summary_.
-
-    Args:
-        SchemaBase (_type_): _description_
-    """
-
-    username: str
-    password: str | None
-
-
-class AddUserParam(AuthSchemaBase):
-    """_summary_.
-
-    Args:
-        AuthSchemaBase (_type_): _description_
-    """
-
-    roles: list[int]
-    email: EmailStr = Field(..., example="user@example.com")
 
 
 # Properties to receive via API on update
@@ -167,3 +146,35 @@ class UsersPublic(SchemaBase):
 
     data: list[UserOut]
     count: int
+
+
+#################################################################################
+
+
+class UserInfoSchemaBase(SchemaBase):
+    """_summary_.
+
+    Args:
+        SchemaBase (_type_): _description_
+    """
+
+    username: str
+    email: EmailStr = Field(..., example="user@example.com")
+    phone: CustomPhoneNumber | None = None
+
+
+class GetUserInfoNoRelationDetail(UserInfoSchemaBase):
+    """_summary_.
+
+    Args:
+        UserInfoSchemaBase (_type_): _description_
+    """
+
+    id: int
+    avatar: str | None = None
+    status: StatusType = Field(default=StatusType.ENABLE)
+    is_superuser: bool
+    join_time: datetime = None
+    last_login_time: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)

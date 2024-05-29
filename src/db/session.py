@@ -28,8 +28,8 @@ def create_engine_and_session(url: str | URL):
         engine = create_async_engine(
             url, echo=settings.QUERY_ECHO, future=True, pool_pre_ping=True
         )
-    except Exception as e:
-        log.error("❌ database link failed {}", e)
+    except Exception as e:  # pylint: disable=broad-except
+        log.error(f"❌ database link failed {e}")
         sys.exit()
     else:
         db_session = async_sessionmaker(

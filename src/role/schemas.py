@@ -17,10 +17,10 @@ class RoleSchemaBase(SchemaBase):
 
     name: str
     data_scope: RoleDataScopeType = Field(
-        default=RoleDataScopeType.custom,
+        default=RoleDataScopeType.CUSTOM,
         description="Permission scope (1: All data permissions 2: Custom data permissions)",
     )
-    status: StatusType = Field(default=StatusType.enable)
+    status: StatusType = Field(default=StatusType.ENABLE)
     remark: str | None = None
 
 

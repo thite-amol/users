@@ -1,5 +1,7 @@
 """Module."""
 
+import traceback
+
 import starlette.status as http_status
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -28,7 +30,7 @@ async def _get_exception_code(status_code: int):
     """
     try:
         STATUS_PHRASES[status_code]
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         code = http_status.HTTP_400_BAD_REQUEST
     else:
         code = status_code
@@ -59,7 +61,7 @@ async def _validation_exception_handler(
                 ctx_error = ctx.get("error")
                 if ctx_error:
                     error["ctx"]["error"] = (
-                        ctx_error.__str__().replace("'", '"')
+                        str(ctx_error).replace("'", '"')
                         if isinstance(ctx_error, Exception)
                         else None
                     )
@@ -160,7 +162,8 @@ def register_exception(app: FastAPI):
 
     @app.exception_handler(PydanticUserError)
     async def pydantic_user_error_handler(
-        request: Request, exc: PydanticUserError
+        request: Request,  # pylint: disable=unused-argument
+        exc: PydanticUserError,
     ):
         """_summary_.
 
@@ -181,7 +184,7 @@ def register_exception(app: FastAPI):
         )
 
     @app.exception_handler(AssertionError)
-    async def assertion_error_handler(request: Request, exc: AssertionError):
+    async def assertion_error_handler(request: Request, exc: AssertionError):  # pylint: disable=unused-argument
         """_summary_.
 
         Args:
@@ -206,7 +209,7 @@ def register_exception(app: FastAPI):
         )
 
     @app.exception_handler(Exception)
-    async def all_exception_handler(request: Request, exc: Exception):
+    async def all_exception_handler(request: Request, exc: Exception):  # pylint: disable=unused-argument
         """_summary_.
 
         Args:
@@ -227,8 +230,6 @@ def register_exception(app: FastAPI):
                 background=exc.background,
             )
         else:
-            import traceback
-
             log.error(f"Unknown exception: {exc}")
             log.error(traceback.format_exc())
             if settings.ENVIRONMENT == "dev":
