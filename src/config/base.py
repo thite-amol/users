@@ -8,7 +8,7 @@ from pydantic import AnyHttpUrl, EmailStr, field_validator
 from pydantic_core.core_schema import FieldValidationInfo
 from pydantic_settings import BaseSettings
 
-DOTENV = os.path.join(os.path.dirname(__file__), ".env")
+from src.config.path_conf import DOTENV, SRC_PATH
 
 
 class AppSettings(BaseSettings):
@@ -52,7 +52,6 @@ class AppSettings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     TOKEN_EXPIRE_MINUTES: int = 15
     JWT_ALGORITHM: str = "HS256"
-    ROOT_DIR: str = os.path.dirname(os.path.abspath(__file__))
 
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
@@ -117,11 +116,8 @@ class AppSettings(BaseSettings):
         Returns:
             Any: _description_
         """
-        return (
-            f"sqlite+aiosqlite:///"
-            f"{os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                            info.data.get('SQL_DB', ''))}.db"  # pylint: disable=inconsistent-quotes
-        )
+        file_path = os.path.join(SRC_PATH, info.data.get("SQL_DB", ""))
+        return f"sqlite+aiosqlite:///{file_path}.db"  # pylint: disable=inconsistent-quotes
 
     @field_validator("EMAILS_FROM_NAME")
     def get_project_name(
@@ -143,7 +139,7 @@ class AppSettings(BaseSettings):
     SERVER_HOST: str = "localhost"
     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
     EMAIL_TEMPLATES_DIR: str = os.path.join(
-        ROOT_DIR, "email-templates", "build"
+        SRC_PATH, "email-templates", "build"
     )
     EMAILS_ENABLED: bool = True
 

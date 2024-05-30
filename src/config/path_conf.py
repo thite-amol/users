@@ -1,15 +1,17 @@
-"""Module."""
+"""Base file to create path."""
 
 import os
 from pathlib import Path
 
-BasePath = Path(__file__).resolve().parent.parent
+BASE_PATH = Path(__file__).resolve().parent.parent.parent
 
-# alembic Migration file storage path
-ALEMBIC_Versions_DIR = os.path.join(BasePath, "alembic", "versions")
+# .env file path
+DOTENV = os.path.join(BASE_PATH, "src", ".env")
+
+SRC_PATH = os.path.join(BASE_PATH, "src")
 
 # Log file path
-LOG_DIR = os.path.join(BasePath, "log")
+LOG_DIR = os.path.join(BASE_PATH, "log")
 
 # Mount static directory
-STATIC_DIR = os.path.join(BasePath, "static")
+STATIC_DIR = os.path.join(BASE_PATH, "static")
