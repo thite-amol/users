@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 import src.users.model  # noqa
 from alembic import context
 from src.config import settings
-from src.db.base import ConcreteBase  # noqa
+from src.db.base import Base  # noqa
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -23,7 +23,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = ConcreteBase.metadata
+target_metadata = [Base.metadata]
 
 
 # other values from the config, defined by the needs of env.py,

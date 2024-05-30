@@ -1,3 +1,5 @@
+"""Module."""
+
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -17,6 +19,14 @@ def send_email(
     html_template: str = "",
     environment: Optional[Dict[str, Any]] = None,
 ) -> None:
+    """_summary_.
+
+    Args:
+        email_to (str): _description_
+        subject_template (str, optional): _description_. Defaults to "".
+        html_template (str, optional): _description_. Defaults to "".
+        environment (Optional[Dict[str, Any]], optional): _description_. Defaults to None.
+    """
     if environment is None:
         environment = {}
     assert (
@@ -35,10 +45,15 @@ def send_email(
     if settings.SMTP_PASSWORD:
         smtp_options["password"] = settings.SMTP_PASSWORD
     response = message.send(to=email_to, render=environment, smtp=smtp_options)
-    logging.info(f"send email result: {response}")
+    logging.info("send email result: %s", response)
 
 
 def send_test_email(email_to: str) -> None:
+    """_summary_.
+
+    Args:
+        email_to (str): _description_
+    """
     project_name = settings.PROJECT_NAME
     subject = f"{project_name} - Test email"
     with open(Path(settings.EMAIL_TEMPLATES_DIR) / "test_email.html") as f:
@@ -52,6 +67,13 @@ def send_test_email(email_to: str) -> None:
 
 
 def send_reset_password_email(email_to: str, email: str, token: str) -> None:
+    """_summary_.
+
+    Args:
+        email_to (str): _description_
+        email (str): _description_
+        token (str): _description_
+    """
     project_name = settings.PROJECT_NAME
     subject = f"{project_name} - Password recovery for user {email}"
     with open(Path(settings.EMAIL_TEMPLATES_DIR) / "reset_password.html") as f:
@@ -73,6 +95,13 @@ def send_reset_password_email(email_to: str, email: str, token: str) -> None:
 
 
 def send_new_account_email(email_to: str, username: str, password: str) -> None:
+    """_summary_.
+
+    Args:
+        email_to (str): _description_
+        username (str): _description_
+        password (str): _description_
+    """
     project_name = settings.PROJECT_NAME
     subject = f"{project_name} - New account for user {username}"
     with open(Path(settings.EMAIL_TEMPLATES_DIR) / "new_account.html") as f:
@@ -93,6 +122,14 @@ def send_new_account_email(email_to: str, username: str, password: str) -> None:
 
 
 def generate_password_reset_token(email: str) -> str:
+    """_summary_.
+
+    Args:
+        email (str): _description_
+
+    Returns:
+        str: _description_
+    """
     delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
     now = datetime.utcnow()
     expires = now + delta
@@ -106,6 +143,14 @@ def generate_password_reset_token(email: str) -> str:
 
 
 def verify_password_reset_token(token: str) -> Optional[str]:
+    """_summary_.
+
+    Args:
+        token (str): _description_
+
+    Returns:
+        Optional[str]: _description_
+    """
     try:
         decoded_token = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
