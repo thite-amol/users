@@ -1,18 +1,14 @@
 """Module."""
 
-import traceback
-
 import starlette.status as http_status
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 from pydantic.errors import PydanticUserError
 from starlette.exceptions import HTTPException
-from starlette.middleware.cors import CORSMiddleware
 from uvicorn.protocols.http.h11_impl import STATUS_PHRASES
 
 from src.common.exception.errors import BaseExceptionMixin
-from src.common.log import log
 from src.common.response.response_code import CustomResponseCode
 from src.common.response.response_schema import response_base
 from src.config import settings
@@ -49,37 +45,8 @@ async def _validation_exception_handler(
     Returns:
         _type_: _description_
     """
-    errors = []
-    for error in e.errors():
-        custom_message = error["msg"]
-        if custom_message:
-            ctx = error.get("ctx")
-            if not ctx:
-                error["msg"] = custom_message
-            else:
-                error["msg"] = custom_message.format(**ctx)
-                ctx_error = ctx.get("error")
-                if ctx_error:
-                    error["ctx"]["error"] = (
-                        str(ctx_error).replace("'", '"')
-                        if isinstance(ctx_error, Exception)
-                        else None
-                    )
-        errors.append(error)
-    error = errors[0]
-    if error.get("type") == "json_invalid":
-        message = "json parsing failed"
-    else:
-        error_input = error.get("input")
-        field = str(error.get("loc")[-1])
-        error_msg = error.get("msg")
-        message = (
-            f"{error_msg} {field}，enter：{error_input}"
-            if settings.ENVIRONMENT == "dev"
-            else error_msg
-        )
-    msg = f"The request parameter is illegal: {message}"
-    data = {"errors": errors} if settings.ENVIRONMENT == "dev" else None
+    msg = "Invalid request data. Please provide correct inputs."
+    data = {"errors": e.errors()}
     content = {
         "code": http_status.HTTP_422_UNPROCESSABLE_ENTITY,
         "msg": msg,
@@ -88,7 +55,9 @@ async def _validation_exception_handler(
     request.state.__request_validation_exception__ = (
         content  # used To Obtain Exception Information In Middleware
     )
-    return MsgSpecJSONResponse(status_code=422, content=content)
+    return MsgSpecJSONResponse(
+        status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY, content=content
+    )
 
 
 def register_exception(app: FastAPI):
@@ -208,100 +177,124 @@ def register_exception(app: FastAPI):
             content=content,
         )
 
-    @app.exception_handler(Exception)
-    async def all_exception_handler(request: Request, exc: Exception):  # pylint: disable=unused-argument
-        """_summary_.
+    @app.exception_handler(BaseExceptionMixin)
+    async def base_exception_error_handler(
+        request: Request, exc: BaseExceptionMixin
+    ):  # pylint: disable=unused-argument
+        """Handles Exception raised by base exception.
 
         Args:
-            request (Request): _description_
-            exc (Exception): _description_
+            request (Request): Current connection properties
+            exc (BaseExceptionMixin): Current Exception
 
         Returns:
-            _type_: _description_
+            MsgSpecJSONResponse: JSON Response
         """
-        if isinstance(exc, BaseExceptionMixin):
-            return MsgSpecJSONResponse(
-                status_code=await _get_exception_code(exc.code),
-                content={
-                    "code": exc.code,
-                    "msg": str(exc.msg),
-                    "data": exc.data if exc.data else None,
-                },
-                background=exc.background,
-            )
-        else:
-            log.error(f"Unknown exception: {exc}")
-            log.error(traceback.format_exc())
-            if settings.ENVIRONMENT == "dev":
-                content = {
-                    "code": http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    "msg": str(exc),
-                    "data": None,
-                }
-            else:
-                res = await response_base.fail(res=CustomResponseCode.HTTP_500)
-                content = res.model_dump()
-            return MsgSpecJSONResponse(
-                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content=content,
-            )
+        content = {
+            "code": exc.code,
+            "msg": exc.msg,
+            "data": exc.data,
+        }
 
-    if settings.BACKEND_CORS_ORIGINS:
+        return MsgSpecJSONResponse(
+            status_code=exc.code,
+            content=content,
+        )
 
-        @app.exception_handler(http_status.HTTP_500_INTERNAL_SERVER_ERROR)
-        async def cors_status_code_500_exception_handler(request, exc):
-            """_summary_.
-
-            Args:
-                request (_type_): _description_
-                exc (_type_): _description_
-
-            Returns:
-                _type_: _description_
-            """
-            if isinstance(exc, BaseExceptionMixin):
-                content = {
-                    "code": exc.code,
-                    "msg": exc.msg,
-                    "data": exc.data,
-                }
-            else:
-                if settings.ENVIRONMENT == "dev":
-                    content = {
-                        "code": http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        "msg": str(exc),
-                        "data": None,
-                    }
-                else:
-                    res = await response_base.fail(
-                        res=CustomResponseCode.HTTP_500
-                    )
-                    content = res.model_dump()
-            response = MsgSpecJSONResponse(
-                status_code=exc.code
-                if isinstance(exc, BaseExceptionMixin)
-                else http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content=content,
-                background=exc.background
-                if isinstance(exc, BaseExceptionMixin)
-                else None,
-            )
-            origin = request.headers.get("origin")
-            if origin:
-                cors = CORSMiddleware(
-                    app=app,
-                    allow_origins=["*"],
-                    allow_credentials=True,
-                    allow_methods=["*"],
-                    allow_headers=["*"],
-                )
-                response.headers.update(cors.simple_headers)
-                has_cookie = "cookie" in request.headers
-                if cors.allow_all_origins and has_cookie:
-                    response.headers["Access-Control-Allow-Origin"] = origin
-                elif not cors.allow_all_origins and cors.is_allowed_origin(
-                    origin=origin
-                ):
-                    response.headers["Access-Control-Allow-Origin"] = origin
-                    response.headers.add_vary_header("Origin")
-            return response
+    # @app.exception_handler(Exception)
+    # async def all_exception_handler(request: Request, exc: Exception):  # pylint: disable=unused-argument
+    #     """_summary_.
+    #
+    #     Args:
+    #         request (Request): _description_
+    #         exc (Exception): _description_
+    #
+    #     Returns:
+    #         _type_: _description_
+    #     """
+    #     if isinstance(exc, BaseExceptionMixin):
+    #         return MsgSpecJSONResponse(
+    #             status_code=await _get_exception_code(exc.code),
+    #             content={
+    #                 "code": exc.code,
+    #                 "msg": str(exc.msg),
+    #                 "data": exc.data if exc.data else None,
+    #             },
+    #             background=exc.background,
+    #         )
+    #     else:
+    #         log.error(f"Unknown exception: {exc}")
+    #         log.error(traceback.format_exc())
+    #         if settings.ENVIRONMENT == "dev":
+    #             content = {
+    #                 "code": http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #                 "msg": str(exc),
+    #                 "data": None,
+    #             }
+    #         else:
+    #             res = await response_base.fail(res=CustomResponseCode.HTTP_500)
+    #             content = res.model_dump()
+    #         return MsgSpecJSONResponse(
+    #             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #             content=content,
+    #         )
+    #
+    # if settings.BACKEND_CORS_ORIGINS:
+    #
+    #     @app.exception_handler(http_status.HTTP_500_INTERNAL_SERVER_ERROR)
+    #     async def cors_status_code_500_exception_handler(request, exc):
+    #         """_summary_.
+    #
+    #         Args:
+    #             request (_type_): _description_
+    #             exc (_type_): _description_
+    #
+    #         Returns:
+    #             _type_: _description_
+    #         """
+    #         if isinstance(exc, BaseExceptionMixin):
+    #             content = {
+    #                 "code": exc.code,
+    #                 "msg": exc.msg,
+    #                 "data": exc.data,
+    #             }
+    #         else:
+    #             if settings.ENVIRONMENT == "dev":
+    #                 content = {
+    #                     "code": http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #                     "msg": str(exc),
+    #                     "data": None,
+    #                 }
+    #             else:
+    #                 res = await response_base.fail(
+    #                     res=CustomResponseCode.HTTP_500
+    #                 )
+    #                 content = res.model_dump()
+    #         response = MsgSpecJSONResponse(
+    #             status_code=exc.code
+    #             if isinstance(exc, BaseExceptionMixin)
+    #             else http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #             content=content,
+    #             background=exc.background
+    #             if isinstance(exc, BaseExceptionMixin)
+    #             else None,
+    #         )
+    #         origin = request.headers.get("origin")
+    #         if origin:
+    #             cors = CORSMiddleware(
+    #                 app=app,
+    #                 allow_origins=["*"],
+    #                 allow_credentials=True,
+    #                 allow_methods=["*"],
+    #                 allow_headers=["*"],
+    #             )
+    #             response.headers.update(cors.simple_headers)
+    #             has_cookie = "cookie" in request.headers
+    #             if cors.allow_all_origins and has_cookie:
+    #                 response.headers["Access-Control-Allow-Origin"] = origin
+    #             elif not cors.allow_all_origins and cors.is_allowed_origin(
+    #                     origin=origin
+    #             ):
+    #                 response.headers["Access-Control-Allow-Origin"] = origin
+    #                 response.headers.add_vary_header("Origin")
+    #         return response

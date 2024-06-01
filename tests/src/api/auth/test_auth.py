@@ -3,9 +3,6 @@
 import json
 from unittest.mock import AsyncMock
 
-import pytest
-
-from src.common.exception import errors
 from src.config import settings
 
 PYTEST_USERNAME = "admin"
@@ -54,7 +51,10 @@ def test_login_user_not_exist(mocker, client, admin_user):
         "src.auth.service.UsersCRUD.get_by_username", side_effect=async_mock
     )
 
-    with pytest.raises(errors.NotFoundError):  # noqa: PT011
-        client.post(
-            f"{settings.API_V1_STR}/login", data=payload, headers=headers
-        )
+    response = client.post(
+        f"{settings.API_V1_STR}/login", data=payload, headers=headers
+    )
+
+    data = response.json()
+    assert data["code"] == 404
+    assert data["msg"] == "User does not exist"

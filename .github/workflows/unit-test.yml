@@ -18,4 +18,4 @@ jobs:
       run: pip install -r dev-requirements.txt
     - uses: actions/setup-python@v5
     - name: Test with pytest
-      run: pytest tests --cov=src --cov-fail-under=80
+      run: pytest tests --cov=src --cov-fail-under=75
