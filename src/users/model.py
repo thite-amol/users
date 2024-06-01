@@ -3,7 +3,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, String
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.base import Base, id_key
@@ -40,6 +40,8 @@ class User(Base):
     avatar: Mapped[str | None] = mapped_column(String(255), default=None)
 
     phone: Mapped[str | None] = mapped_column(String(11), default=None)
+    is_active: Mapped[bool] = mapped_column(default=True)
+
     join_time: Mapped[datetime] = mapped_column(
         init=False, default_factory=timezone.now_utc
     )
@@ -47,8 +49,6 @@ class User(Base):
         init=False, onupdate=timezone.now_utc
     )
 
-    is_active = Column(Boolean(), default=True)
-
     roles: Mapped[list["Role"]] = relationship(  # noqa: F821
-        init=False, secondary=user_role, back_populates="users"
+        init=False, secondary=user_role, back_populates="users", lazy="selectin"
     )
