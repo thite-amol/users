@@ -31,8 +31,6 @@ class UserService:
             db (CurrentSession): _description_
 
         Raises:
-            errors.ForbiddenError: _description_
-            errors.ForbiddenError: _description_
             errors.RequestError: _description_
             errors.ForbiddenError: _description_
 
@@ -44,9 +42,6 @@ class UserService:
                 msg="Open user registration is forbidden on this server",
             )
 
-        # async with async_db_session.begin() as db:
-        if not user_data.password:
-            raise errors.ForbiddenError(msg="Password is empty")
         username = await UsersCRUD.get_by_username(db, user_data.username)
         if username:
             raise errors.RequestError(msg="This username is already registered")
@@ -54,7 +49,7 @@ class UserService:
         email = await UsersCRUD.get_user_by_email(db, email=user_data.email)
 
         if email:
-            raise errors.ForbiddenError(msg="The email has been registered")
+            raise errors.RequestError(msg="The email has been registered")
         return await UsersCRUD.create(db, user_data)
 
 

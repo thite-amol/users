@@ -2,38 +2,34 @@
 
 from datetime import datetime
 
-from pydantic import field_validator
-
-from src.auth.security import get_password_hash, is_password_hashed
 from src.common.schema import SchemaBase
-from src.users.schemas import GetUserInfoNoRelationDetail, UserBase
+from src.users.schemas import GetUserInfoNoRelationDetail
 
-
-class UserUpdatePassword(UserBase):
-    """_summary_.
-
-    Args:
-        UserBase (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-
-    password: str
-
-    @field_validator("password")
-    def hash_password(cls, pw: str) -> str:
-        """_summary_.
-
-        Args:
-            pw (str): _description_
-
-        Returns:
-            str: _description_
-        """
-        if is_password_hashed(pw):
-            return pw
-        return get_password_hash(pw)
+# class UserUpdatePassword(UserBase):
+#     """_summary_.
+#
+#     Args:
+#         UserBase (_type_): _description_
+#
+#     Returns:
+#         _type_: _description_
+#     """
+#
+#     password: str
+#
+#     @field_validator("password")
+#     def hash_password(cls, pw: str) -> str:
+#         """_summary_.
+#
+#         Args:
+#             pw (str): _description_
+#
+#         Returns:
+#             str: _description_
+#         """
+#         if is_password_hashed(pw):
+#             return pw
+#         return get_password_hash(pw)
 
 
 class AuthSchemaBase(SchemaBase):

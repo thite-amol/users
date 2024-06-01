@@ -152,6 +152,8 @@ class BaseRepository(Generic[_Model]):
         """
         schema = self.schema_class(**payload)
         session.add(schema)
+        await session.commit()
+        await session.refresh(schema)
         return schema
 
     async def _all(self, session: AsyncSession) -> AsyncGenerator[Base, None]:

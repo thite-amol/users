@@ -5,7 +5,7 @@ import secrets
 from typing import Any, List, Literal, Optional, Union
 
 from pydantic import AnyHttpUrl, EmailStr, field_validator
-from pydantic_core.core_schema import FieldValidationInfo
+from pydantic_core.core_schema import ValidationInfo
 from pydantic_settings import BaseSettings
 
 from src.config.path_conf import DOTENV, SRC_PATH
@@ -79,13 +79,13 @@ class AppSettings(BaseSettings):
     def assemble_cors_origins(
         cls,
         v: str,
-        info: FieldValidationInfo,  # pylint: disable=unused-argument
+        info: ValidationInfo,  # pylint: disable=unused-argument
     ) -> Union[List[str], str]:
         """_summary_.
 
         Args:
             v (str): _description_
-            info (FieldValidationInfo): _description_
+            info (ValidationInfo): _description_
 
         Raises:
             ValueError: _description_
@@ -105,13 +105,13 @@ class AppSettings(BaseSettings):
     def assemble_db_connection(
         cls,
         v: Optional[str],  # pylint: disable=unused-argument
-        info: FieldValidationInfo,
+        info: ValidationInfo,
     ) -> Any:
         """_summary_.
 
         Args:
             v (Optional[str]): _description_
-            info (FieldValidationInfo): _description_
+            info (ValidationInfo): _description_
 
         Returns:
             Any: _description_
@@ -120,14 +120,12 @@ class AppSettings(BaseSettings):
         return f"sqlite+aiosqlite:///{file_path}.db"  # pylint: disable=inconsistent-quotes
 
     @field_validator("EMAILS_FROM_NAME")
-    def get_project_name(
-        cls, v: Optional[str], info: FieldValidationInfo
-    ) -> str:
+    def get_project_name(cls, v: Optional[str], info: ValidationInfo) -> str:
         """_summary_.
 
         Args:
             v (Optional[str]): _description_
-            info (FieldValidationInfo): _description_
+            info (ValidationInfo): _description_
 
         Returns:
             str: _description_
@@ -144,12 +142,12 @@ class AppSettings(BaseSettings):
     EMAILS_ENABLED: bool = True
 
     @field_validator("EMAILS_ENABLED")
-    def get_emails_enabled(cls, v: bool, info: FieldValidationInfo) -> bool:  # pylint: disable=unused-argument
+    def get_emails_enabled(cls, v: bool, info: ValidationInfo) -> bool:  # pylint: disable=unused-argument
         """_summary_.
 
         Args:
             v (bool): _description_
-            info (FieldValidationInfo): _description_
+            info (ValidationInfo): _description_
 
         Returns:
             bool: _description_
