@@ -12,7 +12,7 @@ PYTEST_USERNAME = "admin"
 PYTEST_PASSWORD = "string"
 
 
-def test_login(mocker, client, admin_user, user_repo) -> None:
+def test_login(mocker, client, admin_user) -> None:
     """Test normal user login."""
     data = {
         "username": PYTEST_USERNAME,
