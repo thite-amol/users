@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request
-from fastapi.security import HTTPBasicCredentials
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.security.utils import get_authorization_scheme_param
 
 from src.api.deps import CurrentUser, get_current_user
@@ -20,7 +20,7 @@ router = APIRouter()
     description="Generate reusable access token.",
 )
 async def user_login(
-    form_data: Annotated[HTTPBasicCredentials, Depends()],
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     session: CurrentSession,
 ) -> ResponseModel:
     """User authentication.
