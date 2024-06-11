@@ -1,8 +1,8 @@
-"""Module."""
+"""Base app config module."""
 
 import os
 import secrets
-from typing import Any, List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union
 
 from pydantic import AnyHttpUrl, EmailStr, field_validator
 from pydantic_core.core_schema import ValidationInfo
@@ -11,37 +11,29 @@ from pydantic_settings import BaseSettings
 from src.config.path_conf import DOTENV, SRC_PATH
 
 
-class AppSettings(BaseSettings):
-    """_summary_.
-
-    Args:
-        BaseSettings (_type_): _description_
-
-    Raises:
-        ValueError: _description_
-
-    Returns:
-        _type_: _description_
-    """
+class BaseConfig(BaseSettings):
+    """Base class with config."""
 
     class Config:
-        """_summary_."""
+        """Pydantic config option class."""
 
         env_file = DOTENV
         env_file_encoding = "utf-8"
         env_prefix = ""
         case_sensitive = True
+        extra = "allow"
+
+
+class CoreSettings(BaseConfig):
+    """Core app settings."""
 
     IS_GOOD_ENV: bool = True
-    # ALLOWED_CORS_ORIGINS: set[AnyUrl]
     DEBUG: bool = False
     ENVIRONMENT: Literal["dev", "prod"] = "dev"
 
-    PROJECT_NAME: str = "Amol's Experiment"
+    PROJECT_NAME: str = "Users management"
     PROJECT_VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
-    SQL_DB: str = os.getenv("SQL_DB")
-    DATABASE_CONNECTION_URL: str = ""
 
     DOCS_URL: str | None = f"{API_V1_STR}/docs"
     REDOCS_URL: str | None = f"{API_V1_STR}/redocs"
@@ -62,15 +54,6 @@ class AppSettings(BaseSettings):
         "http://localhost:3000",
     ]
 
-    SMTP_TLS: bool = True
-    SMTP_PORT: Optional[int] = 587
-    SMTP_HOST: Optional[str]
-    SMTP_USER: Optional[str]
-    SMTP_PASSWORD: Optional[str]
-    EMAILS_FROM_EMAIL: Optional[EmailStr]
-    EMAILS_FROM_NAME: Optional[str] = None
-
-    EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
     FIRST_SUPERUSER: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
     USERS_OPEN_REGISTRATION: bool = False
@@ -81,17 +64,17 @@ class AppSettings(BaseSettings):
         v: str,
         info: ValidationInfo,  # pylint: disable=unused-argument
     ) -> Union[List[str], str]:
-        """_summary_.
+        """Build cors url's list.
 
         Args:
-            v (str): _description_
-            info (ValidationInfo): _description_
+            v (str): Variable value
+            info (ValidationInfo): validation info
 
         Raises:
-            ValueError: _description_
+            ValueError: If value is invalid.
 
         Returns:
-            Union[List[str], str]: _description_
+            Union[List[str], str]: List of allowed domains
         """
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
@@ -99,6 +82,22 @@ class AppSettings(BaseSettings):
             return v
         raise ValueError(v)
 
+    # DateTime
+    DATETIME_TIMEZONE: str = "Asia/Kolkata"
+    DATETIME_FORMAT: str = "%Y-%m-%d %H:%M:%S"
+
+    # Log config
+    LOG_STDOUT_FILENAME: str = "users_access.log"
+    LOG_STDERR_FILENAME: str = "users_error.log"
+
+    STATIC_FILES: bool = False
+
+
+class DatabaseSettings(BaseConfig):
+    """Database config."""
+
+    SQL_DB: str = os.getenv("SQL_DB")
+    DATABASE_CONNECTION_URL: str = ""
     QUERY_ECHO: bool = True
 
     @field_validator("DATABASE_CONNECTION_URL", mode="before")
@@ -106,29 +105,42 @@ class AppSettings(BaseSettings):
         cls,
         v: Optional[str],  # pylint: disable=unused-argument
         info: ValidationInfo,
-    ) -> Any:
-        """_summary_.
+    ) -> str:
+        """Build database connection url.
 
         Args:
-            v (Optional[str]): _description_
-            info (ValidationInfo): _description_
+            v (Optional[str]): variable value
+            info (ValidationInfo): validation info
 
         Returns:
-            Any: _description_
+            str: database connection url
         """
         file_path = os.path.join(SRC_PATH, info.data.get("SQL_DB", ""))
         return f"sqlite+aiosqlite:///{file_path}.db"  # pylint: disable=inconsistent-quotes
 
+
+class EmailSettings(BaseConfig):
+    """Email config."""
+
+    SMTP_TLS: bool = True
+    SMTP_PORT: Optional[int] = 587
+    SMTP_HOST: Optional[str]
+    SMTP_USER: Optional[str]
+    SMTP_PASSWORD: Optional[str]
+    EMAILS_FROM_EMAIL: Optional[EmailStr]
+    EMAILS_FROM_NAME: Optional[str] = None
+    EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
+
     @field_validator("EMAILS_FROM_NAME")
     def get_project_name(cls, v: Optional[str], info: ValidationInfo) -> str:
-        """_summary_.
+        """Build project name.
 
         Args:
-            v (Optional[str]): _description_
-            info (ValidationInfo): _description_
+            v (Optional[str]): variable value
+            info (ValidationInfo): validation info
 
         Returns:
-            str: _description_
+            str: project name
         """
         if not v:
             return info.data.get("PROJECT_NAME")
@@ -143,11 +155,11 @@ class AppSettings(BaseSettings):
 
     @field_validator("EMAILS_ENABLED")
     def get_emails_enabled(cls, v: bool, info: ValidationInfo) -> bool:  # pylint: disable=unused-argument
-        """_summary_.
+        """Check if email is enabled.
 
         Args:
-            v (bool): _description_
-            info (ValidationInfo): _description_
+            v (bool): variable value
+            info (ValidationInfo): validation info
 
         Returns:
             bool: _description_
@@ -158,15 +170,23 @@ class AppSettings(BaseSettings):
             and info.data.get("EMAILS_FROM_EMAIL")
         )
 
-    # DateTime
-    DATETIME_TIMEZONE: str = "Asia/Kolkata"
-    DATETIME_FORMAT: str = "%Y-%m-%d %H:%M:%S"
 
-    # Log config
-    LOG_STDOUT_FILENAME: str = "users_access.log"
-    LOG_STDERR_FILENAME: str = "users_error.log"
+class AppSettings(BaseConfig):
+    """_summary_.
 
-    STATIC_FILES: bool = False
+    Args:
+        BaseSettings (_type_): _description_
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    database: DatabaseSettings = DatabaseSettings()
+    email: EmailSettings = EmailSettings()
+    base: CoreSettings = CoreSettings()
 
 
 settings = AppSettings()

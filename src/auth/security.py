@@ -31,11 +31,13 @@ def create_access_token(
         expire = timezone.now_utc() + expires_delta
     else:
         expire = timezone.now_utc() + timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+            minutes=settings.base.ACCESS_TOKEN_EXPIRE_MINUTES
         )
     to_encode = {"exp": expire, "sub": str(subject)}
     encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+        to_encode,
+        settings.base.SECRET_KEY,
+        algorithm=settings.base.JWT_ALGORITHM,
     )
     return encoded_jwt, expire
 
@@ -57,19 +59,23 @@ def create_refresh_token(
         tuple[str, datetime]: JWT token and expire delta
     """
     if expire_time:
-        expire = expire_time + timedelta(seconds=settings.TOKEN_EXPIRE_MINUTES)
+        expire = expire_time + timedelta(
+            seconds=settings.base.TOKEN_EXPIRE_MINUTES
+        )
         expire_datetime = timezone.f_datetime(expire_time)
         current_datetime = timezone.now_utc()
         if expire_datetime < current_datetime:
             raise TokenError(msg="Refresh token expired.")
     else:
         expire = timezone.now_utc() + timedelta(
-            seconds=settings.TOKEN_EXPIRE_MINUTES
+            seconds=settings.base.TOKEN_EXPIRE_MINUTES
         )
 
     to_encode = {"exp": expire, "sub": sub, **kwargs}
     refresh_token = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+        to_encode,
+        settings.base.SECRET_KEY,
+        algorithm=settings.base.JWT_ALGORITHM,
     )
 
     return refresh_token, expire
@@ -89,7 +95,9 @@ def decode_token(token: str) -> TokenPayload:
     """
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+            token,
+            settings.base.SECRET_KEY,
+            algorithms=[settings.base.JWT_ALGORITHM],
         )
         token_data = TokenPayload(**payload)
     except jwt.DecodeError as e:

@@ -25,7 +25,7 @@ def test_login(mocker, client, admin_user) -> None:
         "src.auth.service.UsersCRUD.update_login_time", return_value=True
     )
     response = client.post(
-        f"{settings.API_V1_STR}/login", data=data, headers=headers
+        f"{settings.base.API_V1_STR}/login", data=data, headers=headers
     )
 
     data = response.json()
@@ -49,7 +49,7 @@ def test_login_user_not_exist(mocker, client, admin_user):
     )
 
     response = client.post(
-        f"{settings.API_V1_STR}/login", data=data, headers=headers
+        f"{settings.base.API_V1_STR}/login", data=data, headers=headers
     )
 
     data = response.json()
@@ -63,7 +63,7 @@ def test_token_invalid(mocker, client, admin_user):
         "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NDZjMDU2Zi1iNTdiLTRmMTgtYjFjYS04ODcxNWYzNDUzODciLCJhdWQiOlsiZmFzdGFwaS11c2VyczphdXRoIl0sImV4cCI6MTcwODA4MTk3MH0.4p6LMuEZe-ZWXx-FDwbCBLaaG_Cj185dJxwGDDfuMuM"
     }
     response = client.post(
-        f"{settings.API_V1_STR}/login/test-token", data={}, headers=headers
+        f"{settings.base.API_V1_STR}/login/test-token", data={}, headers=headers
     )
 
     data = response.json()

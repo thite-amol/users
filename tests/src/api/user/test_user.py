@@ -34,7 +34,7 @@ def test_register(mocker, client, admin_user):
     )
 
     response = client.post(
-        f"{settings.API_V1_STR}/register", data=payload, headers=headers
+        f"{settings.base.API_V1_STR}/register", data=payload, headers=headers
     )
 
     data = response.json()
@@ -68,7 +68,7 @@ def test_register_missing_data(mocker, client, admin_user):
     )
 
     response = client.post(
-        f"{settings.API_V1_STR}/register", data=payload, headers=headers
+        f"{settings.base.API_V1_STR}/register", data=payload, headers=headers
     )
 
     data = response.json()
@@ -113,7 +113,7 @@ def test_register_with_existing_user(
     )
 
     response = client.post(
-        f"{settings.API_V1_STR}/register", data=payload, headers=headers
+        f"{settings.base.API_V1_STR}/register", data=payload, headers=headers
     )
 
     data = response.json()

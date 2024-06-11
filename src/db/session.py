@@ -26,7 +26,10 @@ def create_engine_and_session(url: str | URL):
     """
     try:
         engine = create_async_engine(
-            url, echo=settings.QUERY_ECHO, future=True, pool_pre_ping=True
+            url,
+            echo=settings.database.QUERY_ECHO,
+            future=True,
+            pool_pre_ping=True,
         )
     except Exception as e:  # pylint: disable=broad-except
         log.error(f"❌ database link failed {e}")
@@ -44,7 +47,7 @@ def create_engine_and_session(url: str | URL):
 # )
 
 async_engine, async_db_session = create_engine_and_session(
-    settings.DATABASE_CONNECTION_URL
+    settings.database.DATABASE_CONNECTION_URL
 )
 
 

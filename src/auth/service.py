@@ -51,7 +51,7 @@ async def login(
         elif not current_user.is_active:
             raise errors.AuthorizationError(msg="User is locked, login failed")
         access_token_expires = timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+            minutes=settings.base.ACCESS_TOKEN_EXPIRE_MINUTES
         )
         access_token, access_token_expire_time = create_access_token(
             str(current_user.id), expires_delta=access_token_expires
@@ -136,8 +136,8 @@ async def new_token(
 #     pass
 # token = await get_token(request)
 # if request.user.is_multi_login:
-#     key = f'{settings.TOKEN_REDIS_PREFIX}:{request.user.id}:{token}'
+#     key = f'{settings.base.TOKEN_REDIS_PREFIX}:{request.user.id}:{token}'
 #     await redis_client.delete(key)
 # else:
-#     prefix = f'{settings.TOKEN_REDIS_PREFIX}:{request.user.id}:'
+#     prefix = f'{settings.base.TOKEN_REDIS_PREFIX}:{request.user.id}:'
 #     await redis_client.delete_prefix(prefix)

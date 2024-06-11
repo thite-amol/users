@@ -10,7 +10,9 @@ from src.config.base import settings
 from src.db.session import CurrentSession
 from src.users.model import User
 
-reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/login")
+reusable_oauth2 = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.base.API_V1_STR}/login"
+)
 TokenDep = Annotated[str, Depends(reusable_oauth2)]
 
 

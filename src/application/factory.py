@@ -67,7 +67,7 @@ def register_static_file(app: FastAPI):
     Args:
         app (FastAPI): _description_
     """
-    if settings.STATIC_FILES:
+    if settings.base.STATIC_FILES:
         if not os.path.exists(STATIC_DIR):
             os.mkdir(STATIC_DIR)
         app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -79,12 +79,12 @@ def register_middleware(app: FastAPI):
     Args:
         app (FastAPI): _description_
     """
-    if settings.BACKEND_CORS_ORIGINS:
+    if settings.base.BACKEND_CORS_ORIGINS:
         app.add_middleware(
             CORSMiddleware,
             allow_origins=[
                 str(origin).strip("/")
-                for origin in settings.BACKEND_CORS_ORIGINS
+                for origin in settings.base.BACKEND_CORS_ORIGINS
             ],
             allow_credentials=True,
             allow_methods=["*"],
