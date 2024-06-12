@@ -172,17 +172,7 @@ class EmailSettings(BaseConfig):
 
 
 class AppSettings(BaseConfig):
-    """_summary_.
-
-    Args:
-        BaseSettings (_type_): _description_
-
-    Raises:
-        ValueError: _description_
-
-    Returns:
-        _type_: _description_
-    """
+    """Base application config class."""
 
     database: DatabaseSettings = DatabaseSettings()
     email: EmailSettings = EmailSettings()

@@ -19,8 +19,6 @@ app: FastAPI = application.create(
     debug=settings.base.DEBUG,
     version=settings.base.PROJECT_VERSION,
     default_response_class=MsgSpecJSONResponse,
-    startup_tasks=[],
-    shutdown_tasks=[],
 )
 
 # app.include_router(login_router, tags=["Auth"])
