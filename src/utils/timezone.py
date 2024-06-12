@@ -11,11 +11,11 @@ from src.config import settings
 class TimeZone:
     """_summary_."""
 
-    def __init__(self, tz: str = settings.DATETIME_TIMEZONE):
+    def __init__(self, tz: str = settings.base.DATETIME_TIMEZONE):
         """_summary_.
 
         Args:
-            tz (str, optional): _description_. Defaults to settings.DATETIME_TIMEZONE.
+            tz (str, optional): _description_. Defaults to settings.base.DATETIME_TIMEZONE.
         """
         self.tz_info = zoneinfo.ZoneInfo(tz)
 
@@ -47,13 +47,13 @@ class TimeZone:
         return dt.astimezone(self.tz_info)
 
     def f_str(
-        self, date_str: str, format_str: str = settings.DATETIME_FORMAT
+        self, date_str: str, format_str: str = settings.base.DATETIME_FORMAT
     ) -> datetime:
         """Time string to time zone time.
 
         Args:
             date_str (str): _description_
-            format_str (str, optional): _description_. Defaults to settings.DATETIME_FORMAT.
+            format_str (str, optional): _description_. Defaults to settings.base.DATETIME_FORMAT.
 
         Returns:
             datetime: _description_

@@ -10,46 +10,48 @@
 # )
 from datetime import timedelta
 
-from src.auth.schemas import AuthSchemaBase, GetLoginToken
+from fastapi.security import HTTPBasicCredentials
+
 from src.auth.security import (
     create_access_token,
     create_refresh_token,
-    verify_password,
+    decode_token,
+    update_refresh_token,
 )
+from src.auth.utils import verify_password
 from src.common.exception import errors
 from src.config import settings
 from src.db.session import CurrentSession
 from src.users.repository import UsersCRUD
+from src.users.schemas import GetLoginToken, GetNewToken
 
 
-async def login(*, db: CurrentSession, obj: AuthSchemaBase) -> GetLoginToken:
-    """_summary_.
+async def login(
+    *, db: CurrentSession, form_data: HTTPBasicCredentials
+) -> GetLoginToken:
+    """Generate login token by validating credentials.
 
     Args:
-        db (CurrentSession): _description_
-        obj (AuthSchemaBase): _description_
+        db (CurrentSession): Current database session
+        form_data (HTTPBasicCredentials): User form details
 
     Raises:
-        errors.NotFoundError: _description_
-        errors.AuthorizationError: _description_
-        errors.AuthorizationError: _description_
-        errors.NotFoundError: _description_
-        errors.AuthorizationError: _description_
-        e: _description_
+        errors.NotFoundError: If user id not present in database
+        errors.AuthorizationError: If credentials are invalid
 
     Returns:
-        GetLoginToken: _description_
+        GetLoginToken: JWT token
     """
     try:
-        current_user = await UsersCRUD.get_by_username(db, obj.username)
+        current_user = await UsersCRUD.get_by_username(db, form_data.username)
         if not current_user:
             raise errors.NotFoundError(msg="User does not exist")
-        elif not verify_password(obj.password, current_user.password):
+        elif not verify_password(form_data.password, current_user.password):
             raise errors.AuthorizationError(msg="Invalid Username or Password")
         elif not current_user.is_active:
             raise errors.AuthorizationError(msg="User is locked, login failed")
         access_token_expires = timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+            minutes=settings.base.ACCESS_TOKEN_EXPIRE_MINUTES
         )
         access_token, access_token_expire_time = create_access_token(
             str(current_user.id), expires_delta=access_token_expires
@@ -75,32 +77,53 @@ async def login(*, db: CurrentSession, obj: AuthSchemaBase) -> GetLoginToken:
         return data
 
 
-# async def new_token(*,db:CurrentSession, refresh_token: str) -> GetNewToken:
-#     user_id = await jwt_decode(refresh_token)
-#     if request.user.id != user_id:
-#         raise errors.TokenError(msg='Refresh token is invalid')
-#
-#     current_user = await UsersCRUD.get(db, user_id)
-#     if not current_user:
-#         raise errors.NotFoundError(msg='User does not exist')
-#     elif not current_user.status:
-#         raise errors.AuthorizationError(msg='User is locked, operation failed')
-#     current_token = await get_token(request)
-#     (
-#         new_access_token,
-#         new_refresh_token,
-#         new_access_token_expire_time,
-#         new_refresh_token_expire_time,
-#     ) = await create_new_token(
-#         str(current_user.id), current_token, refresh_token, multi_login=current_user.is_multi_login
-#     )
-#     data = GetNewToken(
-#         access_token=new_access_token,
-#         access_token_expire_time=new_access_token_expire_time,
-#         refresh_token=new_refresh_token,
-#         refresh_token_expire_time=new_refresh_token_expire_time,
-#     )
-#     return data
+async def new_token(
+    *, request, db: CurrentSession, refresh_token: str, current_token: str
+) -> GetNewToken:
+    """Create a new token.
+
+    Args:
+        request (_type_): Current app request
+        db (CurrentSession): Current app db session
+        refresh_token (str): refresh token
+        current_token (str): Current user token
+
+    Raises:
+        errors.TokenError: If token is invalid
+        errors.NotFoundError: If user is not available
+        errors.AuthorizationError: If token data mismatched
+
+    Returns:
+        GetNewToken: Token data
+    """
+    user_id = await decode_token(refresh_token)
+    if request.user.id != user_id:
+        raise errors.TokenError(msg="Refresh token is invalid")
+
+    current_user = await UsersCRUD.get(db, user_id)
+    if not current_user:
+        raise errors.NotFoundError(msg="User does not exist")
+    elif not current_user.status:
+        raise errors.AuthorizationError(msg="User is locked, operation failed")
+    (
+        new_access_token,
+        new_refresh_token,
+        new_access_token_expire_time,
+        new_refresh_token_expire_time,
+    ) = await update_refresh_token(
+        str(current_user.id),
+        current_token,
+        refresh_token,
+        multi_login=current_user.is_multi_login,
+    )
+
+    data = GetNewToken(
+        access_token=new_access_token,
+        access_token_expire_time=new_access_token_expire_time,
+        refresh_token=new_refresh_token,
+        refresh_token_expire_time=new_refresh_token_expire_time,
+    )
+    return data
 
 
 # async def logout(*, request: Request) -> None:
@@ -113,8 +136,8 @@ async def login(*, db: CurrentSession, obj: AuthSchemaBase) -> GetLoginToken:
 #     pass
 # token = await get_token(request)
 # if request.user.is_multi_login:
-#     key = f'{settings.TOKEN_REDIS_PREFIX}:{request.user.id}:{token}'
+#     key = f'{settings.base.TOKEN_REDIS_PREFIX}:{request.user.id}:{token}'
 #     await redis_client.delete(key)
 # else:
-#     prefix = f'{settings.TOKEN_REDIS_PREFIX}:{request.user.id}:'
+#     prefix = f'{settings.base.TOKEN_REDIS_PREFIX}:{request.user.id}:'
 #     await redis_client.delete_prefix(prefix)

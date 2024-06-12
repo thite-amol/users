@@ -81,7 +81,7 @@ def register_exception(app: FastAPI):
         Returns:
             _type_: _description_
         """
-        if settings.ENVIRONMENT == "dev":
+        if settings.base.ENVIRONMENT == "dev":
             content = {
                 "code": exc.status_code,
                 "msg": exc.detail,
@@ -163,7 +163,7 @@ def register_exception(app: FastAPI):
         Returns:
             _type_: _description_
         """
-        if settings.ENVIRONMENT == "dev":
+        if settings.base.ENVIRONMENT == "dev":
             content = {
                 "code": http_status.HTTP_500_INTERNAL_SERVER_ERROR,
                 "msg": str("".join(exc.args) if exc.args else exc.__doc__),
@@ -225,7 +225,7 @@ def register_exception(app: FastAPI):
     #     else:
     #         log.error(f"Unknown exception: {exc}")
     #         log.error(traceback.format_exc())
-    #         if settings.ENVIRONMENT == "dev":
+    #         if settings.base.ENVIRONMENT == "dev":
     #             content = {
     #                 "code": http_status.HTTP_500_INTERNAL_SERVER_ERROR,
     #                 "msg": str(exc),
@@ -239,7 +239,7 @@ def register_exception(app: FastAPI):
     #             content=content,
     #         )
     #
-    # if settings.BACKEND_CORS_ORIGINS:
+    # if settings.base.BACKEND_CORS_ORIGINS:
     #
     #     @app.exception_handler(http_status.HTTP_500_INTERNAL_SERVER_ERROR)
     #     async def cors_status_code_500_exception_handler(request, exc):
@@ -259,7 +259,7 @@ def register_exception(app: FastAPI):
     #                 "data": exc.data,
     #             }
     #         else:
-    #             if settings.ENVIRONMENT == "dev":
+    #             if settings.base.ENVIRONMENT == "dev":
     #                 content = {
     #                     "code": http_status.HTTP_500_INTERNAL_SERVER_ERROR,
     #                     "msg": str(exc),

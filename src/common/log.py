@@ -31,10 +31,10 @@ class Logger:
             os.mkdir(self.log_path)
 
         log_stdout_file = os.path.join(
-            self.log_path, settings.LOG_STDOUT_FILENAME
+            self.log_path, settings.base.LOG_STDOUT_FILENAME
         )
         log_stderr_file = os.path.join(
-            self.log_path, settings.LOG_STDERR_FILENAME
+            self.log_path, settings.base.LOG_STDERR_FILENAME
         )
 
         log_config = {

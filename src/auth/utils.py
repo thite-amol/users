@@ -8,9 +8,49 @@ from typing import Any, Dict, Optional
 import emails
 import jwt
 from emails.template import JinjaTemplate
+from passlib.context import CryptContext
 from pydantic import ValidationError
 
 from src.config import settings
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """_summary_.
+
+    Args:
+        plain_password (str): _description_
+        hashed_password (str): _description_
+
+    Returns:
+        bool: _description_
+    """
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password: str) -> str:
+    """_summary_.
+
+    Args:
+        password (str): _description_
+
+    Returns:
+        str: _description_
+    """
+    return pwd_context.hash(password)
+
+
+def is_password_hashed(password: str) -> bool:
+    """_summary_.
+
+    Args:
+        password (str): _description_
+
+    Returns:
+        bool: _description_
+    """
+    return bool(pwd_context.identify(password))
 
 
 def send_email(

@@ -4,10 +4,12 @@ from datetime import datetime, timedelta
 from typing import Any, Optional, Union
 
 import jwt
+from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 
 from src.common.exception.errors import TokenError
 from src.config import settings
+from src.users.schemas import TokenPayload
 from src.utils.timezone import timezone
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -29,11 +31,13 @@ def create_access_token(
         expire = timezone.now_utc() + expires_delta
     else:
         expire = timezone.now_utc() + timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+            minutes=settings.base.ACCESS_TOKEN_EXPIRE_MINUTES
         )
     to_encode = {"exp": expire, "sub": str(subject)}
     encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+        to_encode,
+        settings.base.SECRET_KEY,
+        algorithm=settings.base.JWT_ALGORITHM,
     )
     return encoded_jwt, expire
 
@@ -55,56 +59,83 @@ def create_refresh_token(
         tuple[str, datetime]: JWT token and expire delta
     """
     if expire_time:
-        expire = expire_time + timedelta(seconds=settings.TOKEN_EXPIRE_MINUTES)
+        expire = expire_time + timedelta(
+            seconds=settings.base.TOKEN_EXPIRE_MINUTES
+        )
         expire_datetime = timezone.f_datetime(expire_time)
         current_datetime = timezone.now_utc()
         if expire_datetime < current_datetime:
             raise TokenError(msg="Refresh token expired.")
     else:
         expire = timezone.now_utc() + timedelta(
-            seconds=settings.TOKEN_EXPIRE_MINUTES
+            seconds=settings.base.TOKEN_EXPIRE_MINUTES
         )
 
     to_encode = {"exp": expire, "sub": sub, **kwargs}
     refresh_token = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+        to_encode,
+        settings.base.SECRET_KEY,
+        algorithm=settings.base.JWT_ALGORITHM,
     )
 
     return refresh_token, expire
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """_summary_.
+def decode_token(token: str) -> TokenPayload:
+    """Decode JWT token.
 
     Args:
-        plain_password (str): _description_
-        hashed_password (str): _description_
+        token (str): JWT token
+
+    Raises:
+        TokenError: If token is not valid
 
     Returns:
-        bool: _description_
+        TokenPayload: Token data
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        payload = jwt.decode(
+            token,
+            settings.base.SECRET_KEY,
+            algorithms=[settings.base.JWT_ALGORITHM],
+        )
+        token_data = TokenPayload(**payload)
+    except jwt.DecodeError as e:
+        raise TokenError(msg="Token decode error") from e
+    except jwt.ExpiredSignatureError as e:
+        raise TokenError(msg="Token Expired") from e
+    except (InvalidTokenError, Exception) as e:
+        raise TokenError(msg="Could not validate credentials") from e
+
+    return token_data
 
 
-def get_password_hash(password: str) -> str:
-    """_summary_.
+async def update_refresh_token(
+    sub: str,
+    token: str,
+    refresh_token: str,
+    **kwargs,  # pylint: disable=unused-argument
+) -> tuple[str, str, datetime, datetime]:
+    """Update refresh and current token timedelta.
 
     Args:
-        password (str): _description_
+        sub (str): User id / Token data
+        token (str): Current token
+        refresh_token (str): Refresh token
+        **kwargs: Dynamic params
 
     Returns:
-        str: _description_
+        tuple[str, str, datetime, datetime]: token data
     """
-    return pwd_context.hash(password)
-
-
-def is_password_hashed(password: str) -> bool:
-    """_summary_.
-
-    Args:
-        password (str): _description_
-
-    Returns:
-        bool: _description_
-    """
-    return bool(pwd_context.identify(password))
+    new_access_token, new_access_token_expire_time = create_access_token(
+        sub, **kwargs
+    )
+    new_refresh_token, new_refresh_token_expire_time = create_refresh_token(
+        sub, **kwargs
+    )
+    return (
+        new_access_token,
+        new_refresh_token,
+        new_access_token_expire_time,
+        new_refresh_token_expire_time,
+    )

@@ -13,11 +13,11 @@ from src.utils.serializers import MsgSpecJSONResponse
 # Adjust the application
 # -------------------------------
 app: FastAPI = application.create(
-    title=settings.PROJECT_NAME,
-    openapi_url=settings.OPENAPI_URL,
-    docs_url=settings.DOCS_URL,
-    debug=settings.DEBUG,
-    version=settings.PROJECT_VERSION,
+    title=settings.base.PROJECT_NAME,
+    openapi_url=settings.base.OPENAPI_URL,
+    docs_url=settings.base.DOCS_URL,
+    debug=settings.base.DEBUG,
+    version=settings.base.PROJECT_VERSION,
     default_response_class=MsgSpecJSONResponse,
     startup_tasks=[],
     shutdown_tasks=[],
