@@ -1,9 +1,6 @@
 """Module."""
 
-import asyncio
 import os
-from functools import partial
-from typing import Callable, Coroutine, Iterable
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -22,20 +19,16 @@ __all__ = ("create",)
 
 def create(
     *_,
-    startup_tasks: Iterable[Callable[[], Coroutine]] | None = None,
-    shutdown_tasks: Iterable[Callable[[], Coroutine]] | None = None,
     **kwargs,
 ) -> FastAPI:
     """The application factory using FastAPI framework.
     🎉 Only passing routes is mandatory to start.
 
     Args:
-        startup_tasks (Iterable[Callable[[], Coroutine]] | None, optional): _description_. Defaults to None.
-        shutdown_tasks (Iterable[Callable[[], Coroutine]] | None, optional): _description_. Defaults to None.
         **kwargs: Dynamic arguments.
 
     Returns:
-        FastAPI: _description_
+        FastAPI: FastAPI application.
     """
     # Initialize the base FastAPI application
     app = FastAPI(**kwargs)
@@ -46,17 +39,6 @@ def create(
     register_page(app)
 
     register_exception(app)
-
-    # Define startup tasks that are running asynchronous using FastAPI hook
-    if startup_tasks:
-        for task in startup_tasks:
-            coro = partial(asyncio.create_task, task())
-            app.on_event("startup")(coro)
-
-    # Define shutdown tasks using FastAPI hook
-    if shutdown_tasks:
-        for task in shutdown_tasks:
-            app.on_event("shutdown")(task)
 
     return app
 
