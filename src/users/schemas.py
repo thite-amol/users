@@ -247,3 +247,11 @@ class GetNewToken(AccessTokenBase):
     refresh_token: str
     refresh_token_type: str = "Bearer"
     refresh_token_expire_time: datetime
+
+
+class GetUserInfoListDetails(GetUserInfoNoRelationDetail):
+    """class to list users."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    roles: list[GetRoleListDetails]

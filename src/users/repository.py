@@ -1,10 +1,12 @@
-"""Module."""
+"""User repository to perform database operations."""
 
-from typing import AsyncGenerator, Callable
+from typing import AsyncGenerator, Callable, Optional
 
 from pydantic import EmailStr
-from sqlalchemy import func, select
+from sqlalchemy import and_, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from sqlalchemy.sql import Select
 
 from src.db.repository import BaseRepository
 from src.users.model import User as UserTable
@@ -15,18 +17,14 @@ func: Callable
 
 
 class UsersRepository(BaseRepository[UserTable]):
-    """_summary_.
-
-    Args:
-        BaseRepository (_type_): _description_
-    """
+    """Repository class to perform database operations."""
 
     def __init__(self) -> None:
-        """_summary_."""
+        """Initializer."""
         super().__init__(UserTable)
 
     async def all(self, db: AsyncSession) -> AsyncGenerator[UserBase, None]:
-        """_summary_.
+        """Return all records.
 
         Returns:
             AsyncGenerator[UserBase, None]: _description_
@@ -141,24 +139,37 @@ class UsersRepository(BaseRepository[UserTable]):
         await db.refresh(user_data)
         return user_data
 
-    async def paginate(self, limit: int, offset: int):
+    async def get_list(
+        self,
+        username: Optional[str] = None,
+        phone: Optional[str] = None,
+        status: Optional[int] = None,
+    ) -> Select:
         """_summary_.
 
         Args:
-            limit (int): _description_
-            offset (int): _description_
+            username (str, optional): _description_. Defaults to None.
+            phone (str, optional): _description_. Defaults to None.
+            status (int, optional): _description_. Defaults to None.
 
         Returns:
-            _type_: _description_
+            Select: _description_
         """
-        query = select(func.count()).select_from(self.schema_class)
-        result = await self.execute(query)
-        count = result.scalar()
-        query = (
-            select(self.schema_class).limit(limit).offset(offset).order_by("id")
+        se = (
+            select(self.schema_class)
+            .options(selectinload(self.schema_class.roles))
+            .order_by(desc(self.schema_class.join_time))
         )
-        data = await self.execute(query)
-        return data.scalars().ALL(), count
+        where_list = []
+        if username:
+            where_list.append(self.schema_class.username.like(f"%{username}%"))
+        if phone:
+            where_list.append(self.schema_class.phone.like(f"%{phone}%"))
+        if status is not None:
+            where_list.append(self.schema_class.status == status)
+        if where_list:
+            se = se.where(and_(*where_list))
+        return se
 
 
 UsersCRUD = UsersRepository()

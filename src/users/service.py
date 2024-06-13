@@ -1,5 +1,9 @@
 """Module."""
 
+from typing import Optional
+
+from sqlalchemy.sql import Select
+
 from src.common.exception import errors
 from src.config import settings
 from src.db.session import CurrentSession
@@ -51,6 +55,27 @@ class UserService:
         if email:
             raise errors.RequestError(msg="The email has been registered")
         return await UsersCRUD.create(db, user_data)
+
+    @staticmethod
+    async def get_select(
+        *,
+        username: Optional[str] = None,
+        phone: Optional[str] = None,
+        status: Optional[int] = None,
+    ) -> Select:
+        """Build Select query to be used while fetching records.
+
+        Args:
+            username (Optional[str], optional): User username. Defaults to None.
+            phone (Optional[str], optional): User phone number. Defaults to None.
+            status (Optional[int], optional): User status. Defaults to None.
+
+        Returns:
+            Select: SQLAlchemy Select class obj
+        """
+        return await UsersCRUD.get_list(
+            username=username, phone=phone, status=status
+        )
 
 
 user_service = UserService()
